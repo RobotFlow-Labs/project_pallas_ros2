@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PALLAS Demo RViz</title>
+    <style>
+      :root {
+        --bg: #0b1117;
+        --chrome: #111a22;
+        --panel: #16212b;
+        --panel-2: #1b2834;
+        --line: #253645;
+        --text: #dbe7f3;
+        --muted: #8ea4b8;
+        --accent: #2fd6c4;
+        --accent-2: #ffd166;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top left, rgba(47, 214, 196, 0.14), transparent 30%),
+          linear-gradient(180deg, #091017 0%, #0c131a 100%);
+        font-family:
+          "SF Pro Display", "Segoe UI", Inter, system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .frame {
+        width: 1600px;
+        height: 900px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .window {
+        height: 100%;
+        border-radius: 22px;
+        overflow: hidden;
+        background: var(--bg);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow:
+          0 28px 80px rgba(0, 0, 0, 0.48),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .titlebar {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px 0 20px;
+        background: linear-gradient(180deg, #15212b 0%, #0f1821 100%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .titlegroup {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .traffic {
+        display: flex;
+        gap: 8px;
+      }
+
+      .traffic span {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        display: block;
+      }
+
+      .traffic span:nth-child(1) { background: #ff5f57; }
+      .traffic span:nth-child(2) { background: #febc2e; }
+      .traffic span:nth-child(3) { background: #28c840; }
+
+      .appname {
+        font-size: 15px;
+        font-weight: 650;
+        letter-spacing: 0.01em;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 12px;
+        margin-left: 10px;
+      }
+
+      .pillbar {
+        display: flex;
+        gap: 10px;
+      }
+
+      .pill {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        color: #c5d5e3;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+
+      .toolbar {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 18px;
+        background: var(--chrome);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .tool {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .tool .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 332px 1fr;
+        height: calc(100% - 100px);
+      }
+
+      .sidebar {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
+          var(--panel);
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
+        display: grid;
+        grid-template-rows: 1fr 220px;
+      }
+
+      .panel {
+        padding: 18px 18px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .panel:last-child {
+        border-bottom: 0;
+      }
+
+      .panel h3 {
+        margin: 0 0 14px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9ab0c2;
+      }
+
+      .display-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .display-table th,
+      .display-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        text-align: left;
+      }
+
+      .display-table th {
+        color: #8ea4b8;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .status-on {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #bde8e1;
+      }
+
+      .status-on::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #2fd6c4;
+        box-shadow: 0 0 14px rgba(47, 214, 196, 0.6);
+      }
+
+      .prop-list {
+        display: grid;
+        gap: 10px;
+        font-size: 13px;
+      }
+
+      .prop {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .prop .key {
+        color: var(--muted);
+      }
+
+      .main {
+        display: grid;
+        grid-template-rows: 1fr 92px;
+        background: #0d141b;
+      }
+
+      .viewport-wrap {
+        padding: 18px;
+        position: relative;
+      }
+
+      .viewport {
+        position: relative;
+        height: 100%;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #04070b;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+
+      .viewport img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .viewport::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.18)),
+          linear-gradient(90deg, rgba(47, 214, 196, 0.04), transparent 18%, transparent 82%, rgba(255, 209, 102, 0.04));
+        pointer-events: none;
+      }
+
+      .overlay {
+        position: absolute;
+        left: 36px;
+        right: 36px;
+        top: 36px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        pointer-events: none;
+      }
+
+      .metric-card,
+      .legend-card {
+        background: rgba(12, 20, 28, 0.78);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 14px 16px;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+      }
+
+      .metric-card {
+        min-width: 250px;
+      }
+
+      .metric-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #9db4c7;
+        margin-bottom: 8px;
+      }
+
+      .metric-value {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .metric-meta {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #9db4c7;
+      }
+
+      .legend-card {
+        width: 230px;
+      }
+
+      .legend-card h4 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #9db4c7;
+      }
+
+      .legend {
+        display: grid;
+        gap: 8px;
+        font-size: 12px;
+      }
+
+      .legend-item {
+        display: grid;
+        grid-template-columns: 14px 1fr auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        align-items: stretch;
+        background: var(--panel-2);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .timeline-main {
+        padding: 16px 20px;
+      }
+
+      .timeline-label {
+        color: #8ea4b8;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 12px;
+      }
+
+      .scrub {
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .scrub::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: 68%;
+        background: linear-gradient(90deg, var(--accent), #78ffe6);
+      }
+
+      .scrub::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 68%;
+        transform: translate(-50%, -50%);
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: white;
+        box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.12);
+      }
+
+      .timeline-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 14px 16px;
+        border-left: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .stat {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .stat .k {
+        color: #8ea4b8;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+      }
+
+      .stat .v {
+        font-size: 16px;
+        font-weight: 650;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="window">
+        <div class="titlebar">
+          <div class="titlegroup">
+            <div class="traffic"><span></span><span></span><span></span></div>
+            <div>
+              <span class="appname">RViz2</span>
+              <span class="subtitle">PALLAS demo workspace</span>
+            </div>
+          </div>
+          <div class="pillbar">
+            <div class="pill">Preset · `pallas_core_unitree.yaml`</div>
+            <div class="pill">Frame · `unilidar_imu`</div>
+            <div class="pill">Theme · Dark</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="tool"><span class="dot"></span>Interact</div>
+          <div class="tool"><span class="dot"></span>Move Camera</div>
+          <div class="tool"><span class="dot"></span>Select</div>
+          <div class="tool"><span class="dot"></span>Measure</div>
+          <div class="tool"><span class="dot"></span>Focus</div>
+        </div>
+
+        <div class="layout">
+          <aside class="sidebar">
+            <section class="panel">
+              <h3>Displays</h3>
+              <table class="display-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Grid</td>
+                    <td><span class="status-on">On</span></td>
+                  </tr>
+                  <tr>
+                    <td>TF</td>
+                    <td><span class="status-on">On</span></td>
+                  </tr>
+                  <tr>
+                    <td>PointCloud2</td>
+                    <td><span class="status-on">/pallas/core/local_map</span></td>
+                  </tr>
+                  <tr>
+                    <td>Odometry</td>
+                    <td><span class="status-on">/pallas/core/odom</span></td>
+                  </tr>
+                  <tr>
+                    <td>Path</td>
+                    <td><span class="status-on">/pallas/core/pose</span></td>
+                  </tr>
+                  <tr>
+                    <td>Axes</td>
+                    <td><span class="status-on">Fixed Frame</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+
+            <section class="panel">
+              <h3>View</h3>
+              <div class="prop-list">
+                <div class="prop"><span class="key">Render mode</span><span>Point cloud</span></div>
+                <div class="prop"><span class="key">Color transformer</span><span>Z axis</span></div>
+                <div class="prop"><span class="key">Decay time</span><span>0.0 s</span></div>
+                <div class="prop"><span class="key">Point size</span><span>2 px</span></div>
+                <div class="prop"><span class="key">Target frame</span><span>`unilidar_imu`</span></div>
+              </div>
+            </section>
+          </aside>
+
+          <main class="main">
+            <div class="viewport-wrap">
+              <div class="viewport">
+                <img src="pallas-demo-map-2.png" alt="PALLAS RViz demo viewport" />
+              </div>
+
+              <div class="overlay">
+                <div class="metric-card">
+                  <div class="metric-title">Live replay status</div>
+                  <div class="metric-value">Aligned local map online</div>
+                  <div class="metric-meta">
+                    Unitree LiDAR output visualized through the shipped PALLAS demo profile.
+                  </div>
+                </div>
+
+                <div class="legend-card">
+                  <h4>Topics</h4>
+                  <div class="legend">
+                    <div class="legend-item">
+                      <span class="swatch" style="background:#2fd6c4"></span>
+                      <span>Local map</span>
+                      <span>active</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="swatch" style="background:#7db7ff"></span>
+                      <span>Odometry path</span>
+                      <span>active</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="swatch" style="background:#ffd166"></span>
+                      <span>Aligned scan</span>
+                      <span>active</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <section class="timeline">
+              <div class="timeline-main">
+                <div class="timeline-label">Playback</div>
+                <div class="scrub"></div>
+              </div>
+
+              <div class="timeline-stats">
+                <div class="stat">
+                  <div class="k">Fixed frame</div>
+                  <div class="v">`unilidar_imu`</div>
+                </div>
+                <div class="stat">
+                  <div class="k">Camera</div>
+                  <div class="v">Orbit</div>
+                </div>
+                <div class="stat">
+                  <div class="k">Transport</div>
+                  <div class="v">Reliable</div>
+                </div>
+                <div class="stat">
+                  <div class="k">Replay rate</div>
+                  <div class="v">1.0x</div>
+                </div>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

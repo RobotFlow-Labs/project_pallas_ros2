@@ -9,12 +9,14 @@ the source of truth narrow: one demo, one RViz profile, one benchmark summary.
 - social preview: `docs/media/pallas-social-preview.png`
 - map screenshot 1: `docs/media/pallas-demo-map-1.png`
 - map screenshot 2: `docs/media/pallas-demo-map-2.png`
-- RViz screenshot: `docs/media/pallas-demo-rviz.svg`
+- RViz screenshot: `docs/media/pallas-demo-rviz.png`
 - canonical demo rosbag archive: GitHub Release asset `pallas-demo-ouster-core.zip`
 - pinned release note: generated from the template below
 
-Current PNG assets are screenshots captured from Unitree LiDAR output. Keep that
-source note in release copy until dedicated PALLAS-captured media replaces them.
+Current PNG assets are based on screenshots captured from Unitree LiDAR output.
+`pallas-demo-rviz.png` is a designed RViz-style composite generated from
+`docs/media/pallas-demo-rviz.html`; keep that source note in release copy until a
+native RViz capture replaces it.
 
 ## Demo Asset Workflow
 

@@ -109,7 +109,7 @@ def test_demo_fetch_uses_local_asset_source(monkeypatch, tmp_path: Path) -> None
     result = runner.invoke(app, ["demo-fetch", "ouster-core-demo"])
     assert result.exit_code == 0
     assert "PALLAS Demo Ready: Ouster Core Demo" in result.stdout
-    assert "pallas_ouster_core_demo" in result.stdout
+    assert "pallas-demo-ouster-core.zip" in result.stdout
 
 
 def test_demo_replay_dry_run_prints_commands(monkeypatch, tmp_path: Path) -> None:

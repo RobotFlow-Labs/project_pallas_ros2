@@ -9,7 +9,7 @@
 
 ## Next
 
-- replace placeholder launch assets with captured demo media
+- replace the designed RViz composite with a native capture once a polished run is available
 - add generated benchmark summaries to release notes
 - extend the demo path with one real-world bag once the canonical asset is stable
 - add richer replay verification around topic and TF output

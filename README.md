@@ -8,8 +8,9 @@
 It is optimized for teams who want a practical bring-up path before they invest
 in deeper SLAM tuning.
 
-Current launch imagery uses real screenshots captured from Unitree LiDAR output
-rather than placeholder artwork.
+Current launch imagery uses real screenshots captured from Unitree LiDAR output.
+The RViz panel is a designed composite built from that output, not a native app
+screen capture.
 
 Recommended expansion:
 
@@ -55,6 +56,12 @@ More operator guidance:
 - first live LiDAR bring-up: [`docs/first_lidar_test.md`](docs/first_lidar_test.md)
 - preset details and topic conventions: [`docs/sensor_presets.md`](docs/sensor_presets.md)
 - launch asset checklist: [`docs/launch_assets.md`](docs/launch_assets.md)
+
+## Demo View
+
+Shipped launch visuals based on Unitree LiDAR output:
+
+![PALLAS RViz-style demo view](docs/media/pallas-demo-rviz.png)
 
 ## Supported Sensors
 
