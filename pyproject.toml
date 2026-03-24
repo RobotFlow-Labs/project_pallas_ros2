@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pallas-dev"
+version = "0.1.0"
+description = "UV-managed developer tooling for the ANIMA PALLAS ROS2 stack."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "pydantic>=2.8",
+  "pyyaml>=6.0",
+  "rich>=13.9",
+  "typer>=0.12",
+]
+
+[dependency-groups]
+dev = [
+  "mypy>=1.15",
+  "pytest>=8.3",
+  "ruff>=0.11",
+]
+
+[project.scripts]
+pallas-dev = "pallas_dev.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/pallas_dev"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["pallas_dev"]

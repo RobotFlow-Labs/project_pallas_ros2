@@ -1,0 +1,27 @@
+anima_pallas_node:
+  ros__parameters:
+    lidar_type: "livox"
+
+    pointcloud_topic: "/livox/lidar"
+    imu_topic: "/livox/imu"
+
+    pose_topic: "/pallas/pose"
+    odom_topic: "/pallas/odom"
+    map_topic: "/pallas/local_map"
+    aligned_scan_topic: "/pallas/aligned_scan"
+
+    odom_frame: "odom"
+    base_frame: "imu"
+
+    sensor_to_body_translation: [0.0, 0.0, 0.0]
+    sensor_to_body_rpy: [0.0, 0.0, 0.0]
+
+    stationary_init_sec: 2.0
+    gravity_mps2: 9.80665
+    min_range_m: 1.0
+    max_range_m: 200.0
+    scan_voxel_size_m: 0.10
+    map_voxel_size_m: 0.20
+    max_imu_buffer_size: 20000
+    max_map_scans: 20
+    map_publish_period_scans: 1

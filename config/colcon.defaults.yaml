@@ -1,0 +1,11 @@
+build:
+  symlink-install: true
+  cmake-args:
+    - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    - -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    - -DBUILD_TESTING=ON
+  event-handlers:
+    - console_direct+
+test:
+  ctest-args:
+    - --output-on-failure
