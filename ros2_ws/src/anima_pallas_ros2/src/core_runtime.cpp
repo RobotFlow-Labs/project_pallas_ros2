@@ -84,30 +84,62 @@ RuntimeOutputs PallasCoreRuntime::IngestScan(const sensor_msgs::msg::PointCloud2
     return outputs;
   }
 
+  const auto prepared = PrepareScan(cloud_msg);
+  if (!prepared.has_value()) {
+    return outputs;
+  }
+
+  return FinalizeScan(*prepared, prepared->scan_pose, prepared->odom_pose);
+}
+
+std::optional<PreparedScan> PallasCoreRuntime::PrepareScan(
+  const sensor_msgs::msg::PointCloud2& cloud_msg) const
+{
+  if (!tracker_.IsInitialized()) {
+    return std::nullopt;
+  }
+
   const TimedPointCloud parsed = ingest_.Ingest(cloud_msg);
   if (parsed.empty()) {
-    return outputs;
+    return std::nullopt;
   }
 
   const SampledScan sampled = sampler_.Sample(parsed);
   if (sampled.empty()) {
-    return outputs;
+    return std::nullopt;
   }
 
   const double stamp_sec = rclcpp::Time(cloud_msg.header.stamp).seconds();
-  const PoseState scan_pose = tracker_.StateAt(stamp_sec);
-  const SampledScan transformed = TransformScan(sampled, scan_pose);
+  return PreparedScan{
+    stamp_sec,
+    tracker_.StateAt(stamp_sec),
+    tracker_.Latest(),
+    sampled};
+}
+
+RuntimeOutputs PallasCoreRuntime::FinalizeScan(
+  const PreparedScan& prepared,
+  const PoseState& scan_pose,
+  const PoseState& odom_pose)
+{
+  RuntimeOutputs outputs;
+  outputs.initialized = tracker_.IsInitialized();
+  if (!outputs.initialized) {
+    return outputs;
+  }
+
+  const SampledScan transformed = TransformScan(prepared.sampled_scan, scan_pose);
   if (transformed.empty()) {
     return outputs;
   }
 
-  surfel_volume_.Integrate(transformed, stamp_sec);
+  surfel_volume_.Integrate(transformed, prepared.stamp_sec);
   ++scan_count_;
 
   outputs.ready = true;
   outputs.initialized = true;
   outputs.scan_pose = scan_pose;
-  outputs.odom_pose = tracker_.Latest();
+  outputs.odom_pose = odom_pose;
   outputs.aligned_scan.reserve(transformed.size());
   for (const auto& sample : transformed) {
     outputs.aligned_scan.push_back(sample.point);

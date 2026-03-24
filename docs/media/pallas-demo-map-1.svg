@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#091118"/>
+  <g stroke="#58c9ff" stroke-width="3" fill="none" opacity="0.8">
+    <path d="M190 380 C290 260, 460 230, 590 320 S850 520, 1050 350"/>
+    <path d="M220 430 C360 330, 500 350, 670 460 S940 590, 1110 430" opacity="0.45"/>
+  </g>
+  <circle cx="680" cy="360" r="12" fill="#7cffb2"/>
+  <text x="60" y="90" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" font-size="48" font-weight="700">Demo Map Placeholder</text>
+  <text x="60" y="140" fill="#bfeeff" font-family="Helvetica, Arial, sans-serif" font-size="24">Replace with the captured local_map screenshot from the canonical demo replay.</text>
+</svg>

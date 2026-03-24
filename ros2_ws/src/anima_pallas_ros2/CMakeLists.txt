@@ -25,7 +25,7 @@ target_include_directories(pallas_core_runtime PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 target_compile_features(pallas_core_runtime PUBLIC cxx_std_17)
-target_link_libraries(pallas_core_runtime PUBLIC Eigen3::Eigen)
+target_link_libraries(pallas_core_runtime Eigen3::Eigen)
 ament_target_dependencies(pallas_core_runtime
   geometry_msgs
   nav_msgs
@@ -41,7 +41,7 @@ target_include_directories(pallas_ct_runtime PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 target_compile_features(pallas_ct_runtime PUBLIC cxx_std_17)
-target_link_libraries(pallas_ct_runtime PUBLIC pallas_core_runtime Eigen3::Eigen)
+target_link_libraries(pallas_ct_runtime pallas_core_runtime Eigen3::Eigen)
 ament_target_dependencies(pallas_ct_runtime
   geometry_msgs
   nav_msgs
@@ -51,7 +51,7 @@ ament_target_dependencies(pallas_ct_runtime
 
 add_executable(anima_pallas_core_node src/pallas_core_node.cpp)
 target_compile_features(anima_pallas_core_node PUBLIC cxx_std_17)
-target_link_libraries(anima_pallas_core_node PRIVATE pallas_core_runtime Eigen3::Eigen)
+target_link_libraries(anima_pallas_core_node pallas_core_runtime Eigen3::Eigen)
 ament_target_dependencies(anima_pallas_core_node
   geometry_msgs
   nav_msgs
@@ -61,7 +61,7 @@ ament_target_dependencies(anima_pallas_core_node
 
 add_executable(anima_pallas_ct_node src/pallas_ct_node.cpp)
 target_compile_features(anima_pallas_ct_node PUBLIC cxx_std_17)
-target_link_libraries(anima_pallas_ct_node PRIVATE pallas_ct_runtime Eigen3::Eigen)
+target_link_libraries(anima_pallas_ct_node pallas_ct_runtime Eigen3::Eigen)
 ament_target_dependencies(anima_pallas_ct_node
   geometry_msgs
   nav_msgs
@@ -80,13 +80,14 @@ install(
   DESTINATION include)
 
 install(
-  DIRECTORY config launch
+  DIRECTORY config launch rviz
   DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_copyright_FOUND TRUE)
   set(ament_cmake_cpplint_FOUND TRUE)
+  set(ament_cmake_uncrustify_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 

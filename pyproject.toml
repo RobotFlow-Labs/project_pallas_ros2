@@ -7,7 +7,7 @@ name = "pallas-dev"
 version = "0.1.0"
 description = "UV-managed developer tooling for the ANIMA PALLAS ROS2 stack."
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.10,<3.13"
 dependencies = [
   "pydantic>=2.8",
   "pyyaml>=6.0",
@@ -17,6 +17,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+  "catkin-pkg>=1.0",
+  "lark>=1.1",
   "mypy>=1.15",
   "pytest>=8.3",
   "ruff>=0.11",
@@ -34,8 +36,8 @@ addopts = "-q"
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py310"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.10"
 packages = ["pallas_dev"]

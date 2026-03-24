@@ -10,6 +10,8 @@
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
+#include <optional>
+
 namespace anima::pallas {
 
 struct RuntimeOutputs {
@@ -22,12 +24,24 @@ struct RuntimeOutputs {
   TimedPointCloud map_cloud{};
 };
 
+struct PreparedScan {
+  double stamp_sec{0.0};
+  PoseState scan_pose{};
+  PoseState odom_pose{};
+  SampledScan sampled_scan{};
+};
+
 class PallasCoreRuntime {
 public:
   explicit PallasCoreRuntime(PipelineConfig config);
 
   void IngestImu(const ImuSample& sample);
   RuntimeOutputs IngestScan(const sensor_msgs::msg::PointCloud2& cloud_msg);
+  std::optional<PreparedScan> PrepareScan(const sensor_msgs::msg::PointCloud2& cloud_msg) const;
+  RuntimeOutputs FinalizeScan(
+    const PreparedScan& prepared,
+    const PoseState& scan_pose,
+    const PoseState& odom_pose);
 
   bool IsInitialized() const;
   PoseState LatestOdom() const;

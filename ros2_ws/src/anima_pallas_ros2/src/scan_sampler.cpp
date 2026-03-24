@@ -49,6 +49,8 @@ struct VoxelAccumulator {
   Eigen::Vector3d sum{Eigen::Vector3d::Zero()};
   double intensity_sum{0.0};
   double time_sum{0.0};
+  std::uint16_t representative_ring{0};
+  double representative_time_sec{std::numeric_limits<double>::infinity()};
   std::size_t count{0};
 };
 
@@ -123,6 +125,10 @@ SampledScan ScanSampler::Sample(const TimedPointCloud& cloud) const
       acc.sum += point.xyz;
       acc.intensity_sum += point.intensity;
       acc.time_sum += point.relative_time_sec;
+      if (point.relative_time_sec < acc.representative_time_sec) {
+        acc.representative_time_sec = point.relative_time_sec;
+        acc.representative_ring = point.ring;
+      }
       ++acc.count;
     }
 
@@ -135,6 +141,7 @@ SampledScan ScanSampler::Sample(const TimedPointCloud& cloud) const
       const double inv = 1.0 / static_cast<double>(acc.count);
       point.xyz = acc.sum * inv;
       point.intensity = static_cast<float>(acc.intensity_sum * inv);
+      point.ring = acc.representative_ring;
       point.relative_time_sec = acc.time_sum * inv;
       voxel_samples.push_back({key, SampledPoint{point, Eigen::Vector3d::UnitZ(), acc.count}});
     }

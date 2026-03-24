@@ -1,0 +1,27 @@
+name: Sensor preset request
+description: Request a new vendor or driver preset.
+title: "[Preset] "
+labels:
+  - preset
+body:
+  - type: input
+    id: vendor
+    attributes:
+      label: Sensor vendor or driver
+      placeholder: Ouster ROS2 driver / custom namespace
+    validations:
+      required: true
+  - type: textarea
+    id: topics
+    attributes:
+      label: Expected ROS topics
+      description: Share the point cloud topic, IMU topic, and frame names.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Integration notes
+      description: Include sample launch commands, frame quirks, or extrinsic assumptions.
+

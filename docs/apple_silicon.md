@@ -2,6 +2,27 @@
 
 PALLAS is designed so the ROS2 core stays portable across standard ARM and x86 targets. The estimation path is written in portable C++ with Eigen and ROS2 primitives, so it should run anywhere the ROS2 toolchain is available, including Apple Silicon environments and Jetson-class devices, without requiring platform-specific rewrites.
 
+For the fastest MacBook-friendly evaluation path, use the repo's Docker smoke
+test instead of setting up ROS2 natively first:
+
+```bash
+./scripts/docker_smoke.sh
+```
+
+That path builds the package in a ROS2 container, runs the Python checks, and
+executes a `colcon build/test` smoke pass.
+
+For a real LiDAR-connected session, use native ROS2 on the host so the driver
+and PALLAS share the same ROS graph cleanly:
+
+```bash
+uv run pallas-dev ros-check pallas_core_ouster.yaml
+uv run pallas-dev build
+uv run pallas-dev launch-live pallas_core_ouster.yaml
+```
+
+The detailed operator flow is in [`docs/first_lidar_test.md`](first_lidar_test.md).
+
 ## Portability Boundary
 
 - Core odometry, motion integration, and map maintenance remain in portable C++.

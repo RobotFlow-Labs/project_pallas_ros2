@@ -21,19 +21,27 @@ void PallasCtRuntime::IngestImu(const ImuSample& sample)
 
 RuntimeOutputs PallasCtRuntime::IngestScan(const sensor_msgs::msg::PointCloud2& cloud_msg)
 {
-  RuntimeOutputs outputs = core_.IngestScan(cloud_msg);
-  if (!outputs.ready) {
+  RuntimeOutputs outputs;
+  outputs.initialized = core_.IsInitialized();
+  if (!outputs.initialized) {
     return outputs;
   }
 
-  AppendControlPoint(outputs.scan_pose);
-  if (trajectory_.Size() < config_.ct_min_control_points) {
+  const auto prepared = core_.PrepareScan(cloud_msg);
+  if (!prepared.has_value()) {
     return outputs;
   }
 
-  outputs.scan_pose = SmoothState(outputs.scan_pose);
-  outputs.odom_pose = SmoothState(outputs.odom_pose);
-  return outputs;
+  AppendControlPoint(prepared->scan_pose);
+
+  PoseState scan_pose = prepared->scan_pose;
+  PoseState odom_pose = prepared->odom_pose;
+  if (trajectory_.Size() >= config_.ct_min_control_points) {
+    scan_pose = SmoothState(scan_pose);
+    odom_pose = SmoothState(odom_pose);
+  }
+
+  return core_.FinalizeScan(*prepared, scan_pose, odom_pose);
 }
 
 bool PallasCtRuntime::IsInitialized() const

@@ -1,0 +1,26 @@
+name: Success report
+description: Share a working setup, bag replay, or deployment.
+title: "[Demo] "
+labels:
+  - showcase
+body:
+  - type: textarea
+    id: setup
+    attributes:
+      label: Working setup
+      description: What sensor, preset, ROS distro, and machine did you use?
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands run
+      render: bash
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Screenshots or benchmark summary
+      description: Link to images, the benchmark summary, or an issue comment with proof.
+      render: markdown
+

@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tooling:
+    name: Python Tooling
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Sync developer dependencies
+        run: uv sync --group dev
+
+      - name: Run Python tests
+        run: uv run pytest
+
+      - name: Run Ruff
+        run: uv run ruff check python tests
+
+      - name: Validate preset pack
+        run: uv run pallas-dev preset-check
+
+      - name: Compile launch files
+        run: python -m py_compile ros2_ws/src/anima_pallas_ros2/launch/*.py
+
+      - name: Diff sanity check
+        run: git diff --check
+
+  ros-docker-smoke:
+    name: Docker Smoke (${{ matrix.ros_distro }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ros_distro:
+          - humble
+          - jazzy
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build --build-arg ROS_DISTRO=${{ matrix.ros_distro }} -t pallas-ci:${{ matrix.ros_distro }} .
+
+      - name: Run smoke checks inside Docker
+        run: |
+          docker run --rm \
+            -e ROS_DISTRO=${{ matrix.ros_distro }} \
+            pallas-ci:${{ matrix.ros_distro }} \
+            bash -lc '
+              source /opt/ros/$ROS_DISTRO/setup.bash &&
+              python3 scripts/make_demo_package.py package --demo ouster-core-demo --overwrite &&
+              export PALLAS_DEMO_SOURCE_DIR=/workspace/artifacts/demo_assets &&
+              uv run pallas-dev preset-check &&
+              uv run pallas-dev demo-fetch ouster-core-demo &&
+              uv run pytest &&
+              uv run ruff check python tests &&
+              uv run pallas-dev build &&
+              uv run pallas-dev demo-replay ouster-core-demo --dry-run &&
+              uv run python scripts/demo_benchmark.py ouster-core-demo --run-replay &&
+              uv run pallas-dev test &&
+              colcon test-result --verbose
+            '

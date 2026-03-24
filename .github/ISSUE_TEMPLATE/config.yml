@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Demo quickstart
+    url: https://github.com/RobotFlow-Labs/project_pallas_ros2/blob/main/docs/demo_quickstart.md
+    about: Start here if you want the no-hardware replay path.
+  - name: Live LiDAR bring-up
+    url: https://github.com/RobotFlow-Labs/project_pallas_ros2/blob/main/docs/first_lidar_test.md
+    about: Use this for a real driver graph and live sensor test.
+

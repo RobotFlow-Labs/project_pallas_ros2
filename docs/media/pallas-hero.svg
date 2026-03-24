@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06141d"/>
+      <stop offset="100%" stop-color="#12324a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect x="96" y="96" width="1408" height="708" rx="28" fill="#0d2232" stroke="#5cd6ff" stroke-width="2"/>
+  <text x="120" y="180" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" font-size="72" font-weight="700">PALLAS</text>
+  <text x="120" y="244" fill="#9ddfff" font-family="Helvetica, Arial, sans-serif" font-size="28">
+    ROS2 LiDAR-inertial odometry with shipped presets, no-hardware demo replay, and portable Docker smoke tests.
+  </text>
+  <g fill="none" stroke="#5cd6ff" stroke-width="6" opacity="0.8">
+    <path d="M180 620 C340 450, 520 430, 700 520 S1060 700, 1360 520" />
+    <path d="M220 680 C430 540, 620 560, 840 670 S1180 760, 1360 620" opacity="0.55" />
+  </g>
+  <g fill="#f7fcff" font-family="Helvetica, Arial, sans-serif">
+    <text x="120" y="360" font-size="34" font-weight="700">Launch surface</text>
+    <text x="120" y="410" font-size="26">demo-fetch</text>
+    <text x="120" y="450" font-size="26">demo-replay</text>
+    <text x="120" y="490" font-size="26">doctor --markdown</text>
+    <text x="120" y="530" font-size="26">preset-matrix</text>
+  </g>
+  <rect x="1020" y="230" width="360" height="270" rx="20" fill="#102a3f" stroke="#5cd6ff" stroke-width="2"/>
+  <text x="1060" y="300" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700">Canonical Demo</text>
+  <text x="1060" y="350" fill="#c9f1ff" font-family="Helvetica, Arial, sans-serif" font-size="24">Preset: pallas_core_ouster.yaml</text>
+  <text x="1060" y="392" fill="#c9f1ff" font-family="Helvetica, Arial, sans-serif" font-size="24">Outputs: pose, odom, aligned_scan, local_map</text>
+  <text x="1060" y="434" fill="#c9f1ff" font-family="Helvetica, Arial, sans-serif" font-size="24">RViz: shipped profile</text>
+</svg>

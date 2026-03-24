@@ -1,0 +1,13 @@
+repository:
+  description: "ROS2 LiDAR-inertial odometry and local mapping with shipped sensor presets and a first-party demo replay path."
+  topics:
+    - ros2
+    - lidar
+    - slam
+    - mapping
+    - point-cloud
+    - ouster
+    - livox
+    - hesai
+    - robosense
+    - velodyne

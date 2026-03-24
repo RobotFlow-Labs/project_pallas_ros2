@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible setup, replay, or runtime issue.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What failed, and what did you expect instead?
+    validations:
+      required: true
+  - type: input
+    id: preset
+    attributes:
+      label: Preset
+      description: Example: pallas_core_ouster.yaml
+      placeholder: pallas_core_ouster.yaml
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands run
+      description: Paste the exact commands in order.
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: `uv run pallas-dev doctor --markdown`
+      description: Paste the markdown output here.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Include demo replay logs, ROS errors, or Docker smoke failures.
+      render: text
+

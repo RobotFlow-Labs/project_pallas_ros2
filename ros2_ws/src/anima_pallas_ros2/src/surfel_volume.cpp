@@ -209,7 +209,7 @@ TimedPointCloud SurfelVolume::Cloud() const
     TimedPoint point;
     point.xyz = surfel.position;
     point.intensity = surfel.intensity;
-    point.relative_time_sec = surfel.stamp_sec;
+    point.relative_time_sec = 0.0;
     cloud.push_back(point);
   }
   return cloud;
@@ -253,7 +253,7 @@ sensor_msgs::msg::PointCloud2 SurfelVolume::ToPointCloud2(
       static_cast<float>(surfels[i].normal.y()),
       static_cast<float>(surfels[i].normal.z()),
       static_cast<float>(surfels[i].weight),
-      static_cast<float>(surfels[i].stamp_sec),
+      0.0F,
       static_cast<float>(surfels[i].support)};
     std::memcpy(msg.data.data() + i * msg.point_step, values, sizeof(values));
   }

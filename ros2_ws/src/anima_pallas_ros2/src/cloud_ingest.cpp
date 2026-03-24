@@ -247,6 +247,16 @@ TimedPointCloud CloudIngest::Ingest(const sensor_msgs::msg::PointCloud2& cloud_m
     }
   }
 
+  if (field_t && !points.empty()) {
+    double min_time = points.front().relative_time_sec;
+    for (const auto& point : points) {
+      min_time = std::min(min_time, point.relative_time_sec);
+    }
+    for (auto& point : points) {
+      point.relative_time_sec -= min_time;
+    }
+  }
+
   return points;
 }
 

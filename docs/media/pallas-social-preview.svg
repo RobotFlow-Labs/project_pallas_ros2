@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#08131c"/>
+  <rect x="40" y="40" width="1120" height="550" rx="24" fill="#10283b" stroke="#5cd6ff" stroke-width="2"/>
+  <text x="90" y="170" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" font-size="68" font-weight="700">PALLAS</text>
+  <text x="90" y="240" fill="#b8ecff" font-family="Helvetica, Arial, sans-serif" font-size="30">ROS2 LiDAR-inertial odometry with a first-party demo replay path.</text>
+  <text x="90" y="340" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" font-size="28">Shipped presets</text>
+  <text x="90" y="390" fill="#d7f6ff" font-family="Helvetica, Arial, sans-serif" font-size="24">Ouster, Livox, Hesai, RoboSense, Velodyne, Unitree</text>
+  <text x="90" y="470" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" font-size="28">Primary CTA</text>
+  <text x="90" y="520" fill="#d7f6ff" font-family="Helvetica, Arial, sans-serif" font-size="24">uv run pallas-dev demo-fetch ouster-core-demo</text>
+</svg>

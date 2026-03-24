@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#0b141d"/>
+  <g stroke="#41f0c2" stroke-width="3" fill="none" opacity="0.75">
+    <path d="M170 500 C330 420, 520 260, 710 260 S980 390, 1100 250"/>
+    <path d="M200 560 C410 470, 620 330, 820 340 S1000 470, 1080 360" opacity="0.45"/>
+  </g>
+  <circle cx="610" cy="310" r="14" fill="#ffffff"/>
+  <text x="60" y="90" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" font-size="48" font-weight="700">Second Map Angle Placeholder</text>
+  <text x="60" y="140" fill="#c7f8ea" font-family="Helvetica, Arial, sans-serif" font-size="24">Use this slot for a second static shot of the canonical replay output.</text>
+</svg>
