@@ -13,29 +13,56 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 
-add_library(pallas_core
-  src/imu_buffer.cpp
-  src/local_map.cpp
-  src/motion_integrator.cpp
-  src/pipeline.cpp
-  src/point_parser.cpp)
+add_library(pallas_core_runtime
+  src/attitude_bootstrap.cpp
+  src/cloud_ingest.cpp
+  src/core_runtime.cpp
+  src/scan_sampler.cpp
+  src/strapdown_tracker.cpp
+  src/surfel_volume.cpp)
 
-target_include_directories(pallas_core PUBLIC
+target_include_directories(pallas_core_runtime PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(pallas_core PUBLIC cxx_std_17)
-target_link_libraries(pallas_core PUBLIC Eigen3::Eigen)
-ament_target_dependencies(pallas_core
+target_compile_features(pallas_core_runtime PUBLIC cxx_std_17)
+target_link_libraries(pallas_core_runtime PUBLIC Eigen3::Eigen)
+ament_target_dependencies(pallas_core_runtime
   geometry_msgs
   nav_msgs
   rclcpp
   sensor_msgs
   tf2_ros)
 
-add_executable(anima_pallas_node src/pallas_node.cpp)
-target_compile_features(anima_pallas_node PUBLIC cxx_std_17)
-target_link_libraries(anima_pallas_node PRIVATE pallas_core Eigen3::Eigen)
-ament_target_dependencies(anima_pallas_node
+add_library(pallas_ct_runtime
+  src/ct_runtime.cpp
+  src/timed_pose_spline.cpp)
+
+target_include_directories(pallas_ct_runtime PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(pallas_ct_runtime PUBLIC cxx_std_17)
+target_link_libraries(pallas_ct_runtime PUBLIC pallas_core_runtime Eigen3::Eigen)
+ament_target_dependencies(pallas_ct_runtime
+  geometry_msgs
+  nav_msgs
+  rclcpp
+  sensor_msgs
+  tf2_ros)
+
+add_executable(anima_pallas_core_node src/pallas_core_node.cpp)
+target_compile_features(anima_pallas_core_node PUBLIC cxx_std_17)
+target_link_libraries(anima_pallas_core_node PRIVATE pallas_core_runtime Eigen3::Eigen)
+ament_target_dependencies(anima_pallas_core_node
+  geometry_msgs
+  nav_msgs
+  rclcpp
+  sensor_msgs
+  tf2_ros)
+
+add_executable(anima_pallas_ct_node src/pallas_ct_node.cpp)
+target_compile_features(anima_pallas_ct_node PUBLIC cxx_std_17)
+target_link_libraries(anima_pallas_ct_node PRIVATE pallas_ct_runtime Eigen3::Eigen)
+ament_target_dependencies(anima_pallas_ct_node
   geometry_msgs
   nav_msgs
   rclcpp
@@ -43,7 +70,7 @@ ament_target_dependencies(anima_pallas_node
   tf2_ros)
 
 install(
-  TARGETS pallas_core anima_pallas_node
+  TARGETS pallas_core_runtime pallas_ct_runtime anima_pallas_core_node anima_pallas_ct_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME})

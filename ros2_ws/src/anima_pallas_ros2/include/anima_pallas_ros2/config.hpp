@@ -14,10 +14,15 @@ struct PipelineConfig {
   double min_range_m{1.0};
   double max_range_m{200.0};
   double scan_voxel_size_m{0.10};
+  double scan_normal_radius_m{0.30};
+  std::size_t scan_min_points_for_normal{6};
   double map_voxel_size_m{0.20};
   std::size_t max_imu_buffer_size{20000};
-  std::size_t max_map_scans{20};
+  std::size_t map_max_surfels{50000};
+  double map_max_age_sec{60.0};
   std::size_t map_publish_period_scans{1};
+  std::size_t ct_min_control_points{4};
+  std::size_t ct_max_control_points{64};
   Eigen::Isometry3d sensor_to_body{Eigen::Isometry3d::Identity()};
 };
 

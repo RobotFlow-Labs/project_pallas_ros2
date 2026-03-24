@@ -1,9 +1,9 @@
 anima_pallas_core_node:
   ros__parameters:
-    lidar_type: "generic"
+    lidar_type: "unitree"
 
-    pointcloud_topic: "/points_raw"
-    imu_topic: "/imu/data"
+    pointcloud_topic: "/unilidar/cloud"
+    imu_topic: "/unilidar/imu"
 
     pose_topic: "/pallas/core/pose"
     odom_topic: "/pallas/core/odom"
@@ -11,9 +11,10 @@ anima_pallas_core_node:
     aligned_scan_topic: "/pallas/core/aligned_scan"
 
     odom_frame: "odom"
-    base_frame: "imu"
+    base_frame: "unilidar_imu"
 
-    # Replace these with the measured LiDAR-to-IMU/body extrinsics for your robot.
+    # Unitree publishes cloud and IMU in different frames. Set these to the
+    # measured LiDAR-to-IMU extrinsics for your robot before field use.
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
 

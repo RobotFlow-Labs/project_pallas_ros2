@@ -1,8 +1,8 @@
 anima_pallas_core_node:
   ros__parameters:
-    lidar_type: "generic"
+    lidar_type: "velodyne"
 
-    pointcloud_topic: "/points_raw"
+    pointcloud_topic: "/velodyne_points"
     imu_topic: "/imu/data"
 
     pose_topic: "/pallas/core/pose"
@@ -13,7 +13,9 @@ anima_pallas_core_node:
     odom_frame: "odom"
     base_frame: "imu"
 
-    # Replace these with the measured LiDAR-to-IMU/body extrinsics for your robot.
+    # The common Velodyne ROS driver does not provide a built-in IMU topic.
+    # This preset assumes an external IMU on /imu/data and requires measured
+    # LiDAR-to-IMU extrinsics.
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
 

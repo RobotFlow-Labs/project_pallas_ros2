@@ -22,16 +22,18 @@ Python developer CLI managed by `uv`.
 
 ROS2 package containing the estimation baseline.
 
-- `point_parser`: robust extraction from `PointCloud2`
-- `imu_buffer`: IMU history and stationary bootstrap
-- `motion_integrator`: bias-aware strapdown propagation
-- `local_map`: rolling voxel map
-- `pipeline`: sensor fusion orchestration
-- `pallas_node`: ROS2 node and publishers
+- `cloud_ingest`: robust extraction from `PointCloud2`
+- `attitude_bootstrap`: stationary IMU alignment and seed-state estimation
+- `strapdown_tracker`: bias-aware propagation and interpolation
+- `scan_sampler`: voxel downsampling and normal estimation
+- `surfel_volume`: rolling local surfel map
+- `core_runtime`: lean realtime odometry and mapping path
+- `ct_runtime`: spline-backed research path layered on the core runtime
+- `runtime_node`: shared ROS2 node wrapper for both runtime profiles
 
 ## Planned Evolution
 
-1. replace strapdown-only scan pose with spline control points
-2. split local map into correspondence and normal estimation layers
-3. add Gauss-Newton solver over spline + bias states
-4. add bag replay and metric reports under `uv run pallas-dev`
+1. replace spline smoothing with full scan/IMU residual optimization
+2. add correspondence search and residual linearization around the surfel volume
+3. add solver loops, benchmark harnesses, and bag replay workflows
+4. keep Apple Silicon and Jetson deployment on the same portable core

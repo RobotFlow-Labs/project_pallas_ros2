@@ -1,9 +1,9 @@
 anima_pallas_core_node:
   ros__parameters:
-    lidar_type: "generic"
+    lidar_type: "robosense"
 
-    pointcloud_topic: "/points_raw"
-    imu_topic: "/imu/data"
+    pointcloud_topic: "/rslidar_points"
+    imu_topic: "/rslidar_imu_data"
 
     pose_topic: "/pallas/core/pose"
     odom_topic: "/pallas/core/odom"
@@ -11,9 +11,10 @@ anima_pallas_core_node:
     aligned_scan_topic: "/pallas/core/aligned_scan"
 
     odom_frame: "odom"
-    base_frame: "imu"
+    base_frame: "rslidar"
 
-    # Replace these with the measured LiDAR-to-IMU/body extrinsics for your robot.
+    # RoboSense defaults to a shared frame id. Replace these with your measured
+    # LiDAR-to-IMU/body extrinsics if your integration uses separate frames.
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
 

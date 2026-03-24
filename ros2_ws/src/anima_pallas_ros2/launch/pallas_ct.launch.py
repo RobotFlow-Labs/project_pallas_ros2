@@ -15,13 +15,13 @@ def generate_launch_description():
         [
             DeclareLaunchArgument(
                 "config_name",
-                default_value="pallas_core.yaml",
+                default_value="pallas_ct.yaml",
                 description="Config file from share/anima_pallas_ros2/config",
             ),
             Node(
                 package="anima_pallas_ros2",
-                executable="anima_pallas_core_node",
-                name="anima_pallas_core_node",
+                executable="anima_pallas_ct_node",
+                name="anima_pallas_ct_node",
                 parameters=[config_path],
                 output="screen",
             )

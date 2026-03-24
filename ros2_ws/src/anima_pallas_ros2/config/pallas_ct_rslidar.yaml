@@ -1,19 +1,18 @@
-anima_pallas_core_node:
+anima_pallas_ct_node:
   ros__parameters:
-    lidar_type: "generic"
+    lidar_type: "robosense"
 
-    pointcloud_topic: "/points_raw"
-    imu_topic: "/imu/data"
+    pointcloud_topic: "/rslidar_points"
+    imu_topic: "/rslidar_imu_data"
 
-    pose_topic: "/pallas/core/pose"
-    odom_topic: "/pallas/core/odom"
-    map_topic: "/pallas/core/local_map"
-    aligned_scan_topic: "/pallas/core/aligned_scan"
+    pose_topic: "/pallas/ct/pose"
+    odom_topic: "/pallas/ct/odom"
+    map_topic: "/pallas/ct/local_map"
+    aligned_scan_topic: "/pallas/ct/aligned_scan"
 
     odom_frame: "odom"
-    base_frame: "imu"
+    base_frame: "rslidar"
 
-    # Replace these with the measured LiDAR-to-IMU/body extrinsics for your robot.
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
 

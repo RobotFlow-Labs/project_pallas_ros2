@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <cstdint>
 #include <vector>
 
 namespace anima::pallas {
@@ -10,6 +11,7 @@ namespace anima::pallas {
 struct TimedPoint {
   Eigen::Vector3d xyz{Eigen::Vector3d::Zero()};
   float intensity{0.0F};
+  std::uint16_t ring{0};
   double relative_time_sec{0.0};
 };
 

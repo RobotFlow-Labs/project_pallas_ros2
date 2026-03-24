@@ -1,14 +1,14 @@
-anima_pallas_core_node:
+anima_pallas_ct_node:
   ros__parameters:
     lidar_type: "generic"
 
     pointcloud_topic: "/points_raw"
     imu_topic: "/imu/data"
 
-    pose_topic: "/pallas/core/pose"
-    odom_topic: "/pallas/core/odom"
-    map_topic: "/pallas/core/local_map"
-    aligned_scan_topic: "/pallas/core/aligned_scan"
+    pose_topic: "/pallas/ct/pose"
+    odom_topic: "/pallas/ct/odom"
+    map_topic: "/pallas/ct/local_map"
+    aligned_scan_topic: "/pallas/ct/aligned_scan"
 
     odom_frame: "odom"
     base_frame: "imu"
