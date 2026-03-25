@@ -1,3 +1,5 @@
+"""ROS2 environment detection, command wrapping, and workspace utilities."""
+
 from __future__ import annotations
 
 import os

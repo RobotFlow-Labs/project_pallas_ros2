@@ -10,6 +10,7 @@
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
+#include <atomic>
 #include <optional>
 
 namespace anima::pallas {
@@ -55,7 +56,7 @@ private:
   StrapdownTracker tracker_;
   ScanSampler sampler_;
   SurfelVolume surfel_volume_;
-  std::size_t scan_count_{0};
+  std::atomic<std::size_t> scan_count_{0};
 };
 
 }  // namespace anima::pallas

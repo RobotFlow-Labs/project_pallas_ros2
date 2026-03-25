@@ -7,6 +7,7 @@ topic and frame conventions instead of hand-editing YAML on day one.
 
 | Vendor preset | Runtime profiles | Point cloud topic | IMU topic | Base frame | Notes |
 | --- | --- | --- | --- | --- | --- |
+| `Gazebo` | Core, CT | `/anima/lidar/points` | `/anima/imu/data` | `imu_frame` | Use `scripts/gazebo_lidar_test.sh`; CUDA path is `scripts/gazebo_cuda_test.sh`. |
 | `generic` | Core, CT | `/points_raw` | `/imu/data` | `imu` | Bring your own driver mapping. |
 | `Unitree` | Core, CT | `/unilidar/cloud` | `/unilidar/imu` | `unilidar_imu` | Set measured LiDAR-to-IMU extrinsics. |
 | `Livox` | Core, CT | `/livox/lidar` | `/livox/imu` | `livox_frame` | Verify frame names on your robot. |
@@ -50,6 +51,14 @@ Start the runtime directly from the preset after the workspace has been built:
 uv run pallas-dev launch-live pallas_core_ouster.yaml
 ```
 
+Start the full Gazebo smoke path:
+
+```bash
+./scripts/gazebo_lidar_test.sh
+./scripts/gazebo_lidar_test.sh --profile ct
+./scripts/gazebo_cuda_test.sh
+```
+
 Validate the full preset pack:
 
 ```bash
@@ -75,3 +84,5 @@ ros2 launch anima_pallas_ros2 pallas_ct.launch.py config_name:=pallas_ct_ouster.
   so downstream stacks that depend on scan ordering can stay intact.
 - For a first live run with a newly connected sensor, follow
   [`docs/first_lidar_test.md`](first_lidar_test.md).
+- For the shared ANIMA simulator path, follow
+  [`docs/gazebo_simulation.md`](gazebo_simulation.md).

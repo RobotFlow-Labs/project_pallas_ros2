@@ -174,6 +174,12 @@ public:
     odom_frame_ = declare_parameter<std::string>("odom_frame", "odom");
     base_frame_ = declare_parameter<std::string>("base_frame", "imu");
 
+    // Ensure IMU and cloud callbacks are mutually exclusive even under
+    // MultiThreadedExecutor to prevent data races on the runtime state.
+    pipeline_cbg_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    rclcpp::SubscriptionOptions sub_opts;
+    sub_opts.callback_group = pipeline_cbg_;
+
     tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     pose_pub_ = create_publisher<geometry_msgs::msg::PoseStamped>(pose_topic_, 10);
     odom_pub_ = create_publisher<nav_msgs::msg::Odometry>(odom_topic_, 50);
@@ -183,10 +189,12 @@ public:
 
     imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
       imu_topic_, rclcpp::SensorDataQoS(),
-      std::bind(&PallasRuntimeNode::OnImu, this, std::placeholders::_1));
+      std::bind(&PallasRuntimeNode::OnImu, this, std::placeholders::_1),
+      sub_opts);
     cloud_sub_ = create_subscription<sensor_msgs::msg::PointCloud2>(
       pointcloud_topic_, rclcpp::SensorDataQoS(),
-      std::bind(&PallasRuntimeNode::OnCloud, this, std::placeholders::_1));
+      std::bind(&PallasRuntimeNode::OnCloud, this, std::placeholders::_1),
+      sub_opts);
   }
 
 private:
@@ -200,20 +208,22 @@ private:
     cfg.max_range_m = declare_parameter<double>("max_range_m", 200.0);
     cfg.scan_voxel_size_m = declare_parameter<double>("scan_voxel_size_m", 0.10);
     cfg.scan_normal_radius_m = declare_parameter<double>("scan_normal_radius_m", 0.30);
-    cfg.scan_min_points_for_normal = static_cast<std::size_t>(
-      declare_parameter<int>("scan_min_points_for_normal", 6));
+    auto safe_size = [this](const char* name, int default_val) -> std::size_t {
+      const int raw = declare_parameter<int>(name, default_val);
+      if (raw < 0) {
+        RCLCPP_WARN(get_logger(), "Parameter '%s' must be non-negative, using default %d", name, default_val);
+        return static_cast<std::size_t>(default_val);
+      }
+      return static_cast<std::size_t>(raw);
+    };
+    cfg.scan_min_points_for_normal = safe_size("scan_min_points_for_normal", 6);
     cfg.map_voxel_size_m = declare_parameter<double>("map_voxel_size_m", 0.20);
-    cfg.map_max_surfels = static_cast<std::size_t>(
-      declare_parameter<int>("map_max_surfels", 50000));
+    cfg.map_max_surfels = safe_size("map_max_surfels", 50000);
     cfg.map_max_age_sec = declare_parameter<double>("map_max_age_sec", 60.0);
-    cfg.max_imu_buffer_size = static_cast<std::size_t>(
-      declare_parameter<int>("max_imu_buffer_size", 20000));
-    cfg.map_publish_period_scans = static_cast<std::size_t>(
-      declare_parameter<int>("map_publish_period_scans", 1));
-    cfg.ct_min_control_points = static_cast<std::size_t>(
-      declare_parameter<int>("ct_min_control_points", 4));
-    cfg.ct_max_control_points = static_cast<std::size_t>(
-      declare_parameter<int>("ct_max_control_points", 64));
+    cfg.max_imu_buffer_size = safe_size("max_imu_buffer_size", 20000);
+    cfg.map_publish_period_scans = safe_size("map_publish_period_scans", 1);
+    cfg.ct_min_control_points = safe_size("ct_min_control_points", 4);
+    cfg.ct_max_control_points = safe_size("ct_max_control_points", 64);
 
     const auto translation = declare_parameter<std::vector<double>>(
       "sensor_to_body_translation", {0.0, 0.0, 0.0});
@@ -278,6 +288,7 @@ private:
   std::string base_frame_;
 
   std::unique_ptr<RuntimeT> runtime_;
+  rclcpp::CallbackGroup::SharedPtr pipeline_cbg_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_sub_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;

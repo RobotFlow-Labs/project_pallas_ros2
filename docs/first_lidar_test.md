@@ -7,6 +7,11 @@ If you do not have hardware connected yet, start with
 [`docs/demo_quickstart.md`](demo_quickstart.md) first. That path exercises the
 same shipped Ouster/Core preset against a maintained bag replay.
 
+If you want a real ROS2 graph without touching hardware, use
+[`docs/gazebo_simulation.md`](gazebo_simulation.md). That path connects PALLAS
+to the shared ANIMA Gazebo repo and exposes `/anima/lidar/points` plus
+`/anima/imu/data`.
+
 ## 1. Pick the closest shipped preset
 
 List the presets:

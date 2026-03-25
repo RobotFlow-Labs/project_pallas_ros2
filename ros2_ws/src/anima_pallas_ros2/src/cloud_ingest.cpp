@@ -24,6 +24,8 @@ bool HostIsBigEndian()
   return reinterpret_cast<const std::uint8_t*>(&value)[0] == 0x01;
 }
 
+const bool kHostIsBigEndian = HostIsBigEndian();
+
 template <typename T>
 T ReadScalar(const std::uint8_t* ptr, bool swap_bytes)
 {
@@ -97,7 +99,7 @@ std::optional<double> ReadFieldValue(
     return std::nullopt;
   }
 
-  const bool swap_bytes = cloud_msg.is_bigendian != HostIsBigEndian();
+  const bool swap_bytes = cloud_msg.is_bigendian != kHostIsBigEndian;
   const std::uint8_t* ptr = cloud_msg.data.data() + raw_offset;
 
   switch (field.datatype) {

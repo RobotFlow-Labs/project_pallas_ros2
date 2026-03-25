@@ -1,3 +1,5 @@
+"""Demo asset lifecycle: fetch, extract, replay, and benchmark ROS2 bags."""
+
 from __future__ import annotations
 
 import os
@@ -171,10 +173,28 @@ def _local_asset_override(demo: DemoAsset) -> Path | None:
     return candidate if candidate.is_file() else None
 
 
+_MAX_DOWNLOAD_BYTES = 500 * 1024 * 1024  # 500 MB safety cap
+
+
+def _safe_extractall(archive: zipfile.ZipFile, target: Path) -> None:
+    resolved_target = target.resolve()
+    for member in archive.namelist():
+        member_path = (resolved_target / member).resolve()
+        if not member_path.is_relative_to(resolved_target):
+            raise RuntimeError(f"Zip entry escapes target directory: {member}")
+    archive.extractall(target)
+
+
 def _download_archive(demo: DemoAsset, archive_path: Path) -> None:
+    url = demo.release_url
+    if not url.startswith("https://"):
+        raise RuntimeError(f"Refusing non-HTTPS download URL: {url}")
     archive_path.parent.mkdir(parents=True, exist_ok=True)
-    with urllib.request.urlopen(demo.release_url) as response:
-        archive_path.write_bytes(response.read())
+    with urllib.request.urlopen(url) as response:
+        data = response.read(_MAX_DOWNLOAD_BYTES + 1)
+        if len(data) > _MAX_DOWNLOAD_BYTES:
+            raise RuntimeError(f"Download exceeds {_MAX_DOWNLOAD_BYTES} byte limit")
+        archive_path.write_bytes(data)
 
 
 def fetch_demo(name: str, *, force: bool = False) -> DemoPaths:
@@ -200,7 +220,7 @@ def fetch_demo(name: str, *, force: bool = False) -> DemoPaths:
         shutil.rmtree(paths.install_root)
     paths.install_root.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(paths.archive_path) as archive:
-        archive.extractall(demo_cache_root())
+        _safe_extractall(archive, demo_cache_root())
 
     if not _existing_install_is_complete(paths):
         raise RuntimeError(
@@ -279,49 +299,58 @@ def run_demo_replay(
     missing_topics = expected_output_topics(paths.demo)
     seen_topics: tuple[str, ...] = ()
 
-    with node_log.open("w", encoding="utf-8") as node_handle, bag_log.open("w", encoding="utf-8") as bag_handle:
-        node_proc = subprocess.Popen(
-            prepare_command(node_cmd, source_ros=True),
-            cwd=repo_root(),
-            env=command_env(),
-            stdout=node_handle,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
-        time.sleep(node_startup_sec)
+    bag_returncode = -1
+    node_returncode = -1
+    try:
+        with node_log.open("w", encoding="utf-8") as node_handle, bag_log.open(
+            "w", encoding="utf-8"
+        ) as bag_handle:
+            node_proc = subprocess.Popen(
+                prepare_command(node_cmd, source_ros=True),
+                cwd=repo_root(),
+                env=command_env(),
+                stdout=node_handle,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            time.sleep(node_startup_sec)
 
-        bag_proc = subprocess.Popen(
-            prepare_command(bag_cmd, source_ros=True),
-            cwd=repo_root(),
-            env=command_env(),
-            stdout=bag_handle,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
+            bag_proc = subprocess.Popen(
+                prepare_command(bag_cmd, source_ros=True),
+                cwd=repo_root(),
+                env=command_env(),
+                stdout=bag_handle,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
 
-        if verify_topics:
-            deadline = time.monotonic() + topic_timeout_sec
-            expected = set(expected_output_topics(paths.demo))
-            while time.monotonic() < deadline:
-                seen = _topic_inventory(topic_timeout_sec)
-                missing = tuple(sorted(expected - seen))
-                if not missing:
-                    missing_topics = ()
-                    seen_topics = tuple(sorted(expected))
-                    break
-                missing_topics = missing
-                time.sleep(0.5)
+            if verify_topics:
+                per_call_timeout = min(3.0, topic_timeout_sec)
+                deadline = time.monotonic() + topic_timeout_sec
+                expected = set(expected_output_topics(paths.demo))
+                while time.monotonic() < deadline:
+                    seen = _topic_inventory(per_call_timeout)
+                    found = expected & seen
+                    missing = expected - seen
+                    seen_topics = tuple(sorted(found))
+                    if not missing:
+                        missing_topics = ()
+                        break
+                    missing_topics = tuple(sorted(missing))
+                    time.sleep(0.5)
 
-        bag_returncode = bag_proc.wait(timeout=max(10.0, topic_timeout_sec + 5.0))
-
-    node_returncode = 0
-    if node_proc is not None:
-        node_proc.terminate()
-        try:
-            node_returncode = node_proc.wait(timeout=5.0)
-        except subprocess.TimeoutExpired:
-            node_proc.kill()
-            node_returncode = node_proc.wait(timeout=5.0)
+            bag_returncode = bag_proc.wait(timeout=max(10.0, topic_timeout_sec + 5.0))
+    finally:
+        for proc in (bag_proc, node_proc):
+            if proc is not None and proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5.0)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
+        if node_proc is not None and node_proc.returncode is not None:
+            node_returncode = node_proc.returncode
 
     wall_runtime = time.perf_counter() - start
     ok = bag_returncode == 0 and (not verify_topics or not missing_topics)

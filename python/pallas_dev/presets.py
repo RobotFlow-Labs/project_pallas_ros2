@@ -1,3 +1,5 @@
+"""Sensor preset discovery, validation, and metadata for shipped YAML configs."""
+
 from __future__ import annotations
 
 import re
@@ -26,6 +28,7 @@ _REQUIRED_KEYS = (
 )
 _VENDOR_LABELS = {
     "generic": "Generic",
+    "gazebo": "Gazebo",
     "unitree": "Unitree",
     "livox": "Livox",
     "ouster": "Ouster",
@@ -36,6 +39,10 @@ _VENDOR_LABELS = {
 }
 _VENDOR_NOTES = {
     "generic": "Bring your own topics, frames, and range limits.",
+    "gazebo": (
+        "Use scripts/gazebo_lidar_test.sh for the ANIMA Gazebo repo. "
+        "Pass --gpu or use scripts/gazebo_cuda_test.sh for the CUDA-backed path."
+    ),
     "unitree": "Set measured LiDAR-to-IMU extrinsics before field use.",
     "livox": "Verify Livox frame wiring and measured extrinsics.",
     "ouster": "Verify the Ouster driver frame mapping against your install.",

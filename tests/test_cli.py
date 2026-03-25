@@ -43,11 +43,20 @@ def test_preset_show_vendor_details() -> None:
     assert "pallas_ct.launch.py" in result.stdout
 
 
+def test_preset_show_gazebo_details() -> None:
+    runner = CliRunner()
+    result = runner.invoke(app, ["preset-show", "pallas_core_gazebo.yaml"])
+    assert result.exit_code == 0
+    assert "/anima/lidar/points" in result.stdout
+    assert "Gazebo" in result.stdout
+
+
 def test_preset_matrix_markdown() -> None:
     runner = CliRunner()
     result = runner.invoke(app, ["preset-matrix", "--format", "markdown"])
     assert result.exit_code == 0
     assert "| Vendor | Core | CT |" in result.stdout
+    assert "| Gazebo | yes | yes |" in result.stdout
     assert "| Ouster | yes | yes |" in result.stdout
 
 
@@ -177,6 +186,43 @@ def test_ros_check_fails_when_topic_is_missing(monkeypatch) -> None:
     result = runner.invoke(app, ["ros-check", "pallas_core_ouster.yaml"])
     assert result.exit_code == 1
     assert "missing" in result.stdout
+
+
+def test_ros_check_falls_back_when_topic_list_types_is_unsupported(monkeypatch) -> None:
+    def fake_run_capture(cmd, *, extra_env=None, source_ros=False, timeout=None):
+        assert source_ros is True
+        if cmd == ["ros2", "topic", "list", "--types"]:
+            return subprocess.CompletedProcess(
+                cmd,
+                2,
+                "",
+                "ros2: error: unrecognized arguments: --types",
+            )
+        if cmd == ["ros2", "topic", "list", "-t"]:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                "/anima/lidar/points [sensor_msgs/msg/PointCloud2]\n"
+                "/anima/imu/data [sensor_msgs/msg/Imu]\n",
+                "",
+            )
+        if cmd == ["ros2", "topic", "info", "-v", "/anima/lidar/points"]:
+            return subprocess.CompletedProcess(
+                cmd, 0, "Type: sensor_msgs/msg/PointCloud2\nPublisher count: 1\n", ""
+            )
+        if cmd == ["ros2", "topic", "info", "-v", "/anima/imu/data"]:
+            return subprocess.CompletedProcess(
+                cmd, 0, "Type: sensor_msgs/msg/Imu\nPublisher count: 1\n", ""
+            )
+        raise AssertionError(f"unexpected command: {cmd}")
+
+    monkeypatch.setattr(cli_module, "run_capture", fake_run_capture)
+    monkeypatch.setattr(cli_module, "workspace_setup", lambda: Path("/tmp/install/setup.bash"))
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["ros-check", "pallas_core_gazebo.yaml"])
+    assert result.exit_code == 0
+    assert "ROS graph matches pallas_core_gazebo.yaml" in result.stdout
 
 
 def test_launch_live_requires_built_workspace(monkeypatch) -> None:

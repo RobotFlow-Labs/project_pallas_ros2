@@ -1,4 +1,5 @@
 #include <anima_pallas_ros2/scan_sampler.hpp>
+#include <anima_pallas_ros2/normal_utils.hpp>
 
 #include <Eigen/Eigenvalues>
 
@@ -60,14 +61,6 @@ VoxelKey MakeKey(const Eigen::Vector3d& point, double voxel_size_m)
     static_cast<std::int64_t>(std::floor(point.x() / voxel_size_m)),
     static_cast<std::int64_t>(std::floor(point.y() / voxel_size_m)),
     static_cast<std::int64_t>(std::floor(point.z() / voxel_size_m))};
-}
-
-Eigen::Vector3d FallbackNormal(const Eigen::Vector3d& point)
-{
-  if (point.norm() > 1e-9) {
-    return -point.normalized();
-  }
-  return Eigen::Vector3d::UnitZ();
 }
 
 }  // namespace
@@ -165,21 +158,45 @@ SampledScan ScanSampler::Sample(const TimedPointCloud& cloud) const
     : std::max(0.30, options_.voxel_size_m * 2.0);
   const double radius_sq = radius * radius;
 
+  // Build spatial index: map each sample to its grid cell for O(1) neighbor lookup.
+  // Cell size equals the normal search radius so each point only needs to check
+  // its own cell plus the 26 adjacent cells (3x3x3 neighborhood).
+  const double cell_size = radius > 0.0 ? radius : 0.30;
+  std::unordered_map<VoxelKey, std::vector<std::size_t>, VoxelKeyHash> spatial_index;
+  spatial_index.reserve(samples.size());
+  for (std::size_t i = 0; i < samples.size(); ++i) {
+    const VoxelKey cell = MakeKey(samples[i].point.xyz, cell_size);
+    spatial_index[cell].push_back(i);
+  }
+
   for (std::size_t i = 0; i < samples.size(); ++i) {
     const Eigen::Vector3d& center = samples[i].point.xyz;
+    const VoxelKey center_cell = MakeKey(center, cell_size);
     double total_weight = 0.0;
     Eigen::Vector3d mean = Eigen::Vector3d::Zero();
     std::size_t neighbor_count = 0;
 
-    for (std::size_t j = 0; j < samples.size(); ++j) {
-      const Eigen::Vector3d diff = samples[j].point.xyz - center;
-      if (diff.squaredNorm() > radius_sq) {
-        continue;
+    // Search 3x3x3 neighborhood
+    for (std::int64_t dx = -1; dx <= 1; ++dx) {
+      for (std::int64_t dy = -1; dy <= 1; ++dy) {
+        for (std::int64_t dz = -1; dz <= 1; ++dz) {
+          const VoxelKey neighbor_cell{center_cell.x + dx, center_cell.y + dy, center_cell.z + dz};
+          const auto it = spatial_index.find(neighbor_cell);
+          if (it == spatial_index.end()) {
+            continue;
+          }
+          for (const std::size_t j : it->second) {
+            const Eigen::Vector3d diff = samples[j].point.xyz - center;
+            if (diff.squaredNorm() > radius_sq) {
+              continue;
+            }
+            const double weight = static_cast<double>(std::max<std::size_t>(1, samples[j].support));
+            total_weight += weight;
+            mean += weight * samples[j].point.xyz;
+            ++neighbor_count;
+          }
+        }
       }
-      const double weight = static_cast<double>(std::max<std::size_t>(1, samples[j].support));
-      total_weight += weight;
-      mean += weight * samples[j].point.xyz;
-      ++neighbor_count;
     }
 
     if (neighbor_count < options_.min_points_for_normal || total_weight <= 0.0) {
@@ -190,14 +207,25 @@ SampledScan ScanSampler::Sample(const TimedPointCloud& cloud) const
     mean /= total_weight;
 
     Eigen::Matrix3d covariance = Eigen::Matrix3d::Zero();
-    for (std::size_t j = 0; j < samples.size(); ++j) {
-      const Eigen::Vector3d diff = samples[j].point.xyz - center;
-      if (diff.squaredNorm() > radius_sq) {
-        continue;
+    for (std::int64_t dx = -1; dx <= 1; ++dx) {
+      for (std::int64_t dy = -1; dy <= 1; ++dy) {
+        for (std::int64_t dz = -1; dz <= 1; ++dz) {
+          const VoxelKey neighbor_cell{center_cell.x + dx, center_cell.y + dy, center_cell.z + dz};
+          const auto it = spatial_index.find(neighbor_cell);
+          if (it == spatial_index.end()) {
+            continue;
+          }
+          for (const std::size_t j : it->second) {
+            const Eigen::Vector3d diff = samples[j].point.xyz - center;
+            if (diff.squaredNorm() > radius_sq) {
+              continue;
+            }
+            const double weight = static_cast<double>(std::max<std::size_t>(1, samples[j].support));
+            const Eigen::Vector3d centered = samples[j].point.xyz - mean;
+            covariance += weight * centered * centered.transpose();
+          }
+        }
       }
-      const double weight = static_cast<double>(std::max<std::size_t>(1, samples[j].support));
-      const Eigen::Vector3d centered = samples[j].point.xyz - mean;
-      covariance += weight * centered * centered.transpose();
     }
     covariance /= total_weight;
 

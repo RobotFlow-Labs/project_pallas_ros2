@@ -1,4 +1,5 @@
 #include <anima_pallas_ros2/surfel_volume.hpp>
+#include <anima_pallas_ros2/normal_utils.hpp>
 
 #include <sensor_msgs/msg/point_field.hpp>
 
@@ -13,14 +14,6 @@
 namespace anima::pallas {
 
 namespace {
-
-Eigen::Vector3d FallbackNormal(const Eigen::Vector3d& point)
-{
-  if (point.norm() > 1e-9) {
-    return -point.normalized();
-  }
-  return Eigen::Vector3d::UnitZ();
-}
 
 std::size_t SupportWeight(std::size_t support)
 {
@@ -87,20 +80,17 @@ void SurfelVolume::PruneToLimit()
     return;
   }
 
-  while (surfels_.size() > options_.max_surfels) {
-    auto oldest = surfels_.begin();
-    for (auto it = std::next(surfels_.begin()); it != surfels_.end(); ++it) {
-      if (it->second.surfel.stamp_sec < oldest->second.surfel.stamp_sec) {
-        oldest = it;
-        continue;
-      }
-      if (it->second.surfel.stamp_sec == oldest->second.surfel.stamp_sec &&
-        it->second.sequence < oldest->second.sequence)
-      {
-        oldest = it;
-      }
-    }
-    surfels_.erase(oldest);
+  // Batch sort by (stamp, sequence) and erase the oldest entries in one pass.
+  std::vector<std::pair<std::pair<double, uint64_t>, VoxelKey>> entries;
+  entries.reserve(surfels_.size());
+  for (const auto& [key, entry] : surfels_) {
+    entries.push_back({{entry.surfel.stamp_sec, entry.sequence}, key});
+  }
+  std::sort(entries.begin(), entries.end());
+
+  const std::size_t to_remove = surfels_.size() - options_.max_surfels;
+  for (std::size_t i = 0; i < to_remove; ++i) {
+    surfels_.erase(entries[i].second);
   }
 }
 
@@ -165,7 +155,6 @@ void SurfelVolume::Integrate(const SampledScan& scan, double stamp_sec)
     entry.sequence = ++sequence_;
   }
 
-  CullExpired(stamp_sec);
   PruneToLimit();
 }
 

@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-rclcpp \
     ros-${ROS_DISTRO}-sensor-msgs \
     ros-${ROS_DISTRO}-tf2-ros \
-  && python3 -m pip install --no-cache-dir uv \
+  && python3 -m pip install --no-cache-dir "uv>=0.7,<1" \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace

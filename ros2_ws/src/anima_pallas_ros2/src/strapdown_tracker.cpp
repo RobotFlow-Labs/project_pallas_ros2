@@ -132,7 +132,11 @@ PoseState StrapdownTracker::InterpolateUnlocked(double stamp_sec) const
   interp.velocity = lower->velocity * (1.0 - alpha) + upper->velocity * alpha;
   interp.gyro_bias = lower->gyro_bias * (1.0 - alpha) + upper->gyro_bias * alpha;
   interp.accel_bias = lower->accel_bias * (1.0 - alpha) + upper->accel_bias * alpha;
-  interp.orientation = lower->orientation.slerp(alpha, upper->orientation);
+  Eigen::Quaterniond target = upper->orientation;
+  if (lower->orientation.coeffs().dot(target.coeffs()) < 0.0) {
+    target.coeffs() *= -1.0;
+  }
+  interp.orientation = lower->orientation.slerp(alpha, target);
   interp.orientation.normalize();
   return interp;
 }

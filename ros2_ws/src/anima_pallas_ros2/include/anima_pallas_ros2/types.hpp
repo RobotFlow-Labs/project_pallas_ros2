@@ -24,6 +24,7 @@ struct ImuSample {
 };
 
 struct PoseState {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   double stamp_sec{0.0};
   Eigen::Quaterniond orientation{Eigen::Quaterniond::Identity()};
   Eigen::Vector3d position{Eigen::Vector3d::Zero()};

@@ -1,3 +1,5 @@
+"""CLI application for PALLAS developer workflows (presets, demos, builds)."""
+
 from __future__ import annotations
 
 import os
@@ -88,18 +90,45 @@ def _extract_count(output: str, label: str) -> str:
     return "?"
 
 
+def _topic_inventory_without_types(output: str) -> dict[str, str]:
+    inventory: dict[str, str] = {}
+    for raw_line in output.splitlines():
+        topic = raw_line.strip()
+        if topic:
+            inventory[topic] = "<unknown>"
+    return inventory
+
+
+def _collect_topic_inventory(timeout_sec: float) -> dict[str, str]:
+    list_commands = (
+        ("ros2 topic list --types", ["ros2", "topic", "list", "--types"], _parse_topic_inventory),
+        ("ros2 topic list -t", ["ros2", "topic", "list", "-t"], _parse_topic_inventory),
+        ("ros2 topic list", ["ros2", "topic", "list"], _topic_inventory_without_types),
+    )
+
+    last_result: subprocess.CompletedProcess[str] | None = None
+    last_action = "ros2 topic list"
+    for action, cmd, parser in list_commands:
+        result = _ros_capture(cmd, timeout=timeout_sec)
+        if result.returncode == 0:
+            return parser(result.stdout)
+        last_result = result
+        last_action = action
+
+    if last_result is not None:
+        _print_ros_failure(last_action, last_result)
+        raise typer.Exit(last_result.returncode or 1)
+
+    raise typer.Exit(1)
+
+
 def _render_ros_check(name: str, timeout_sec: float) -> tuple[bool, str]:
     try:
         preset = get_preset(name)
     except KeyError as exc:
         raise typer.BadParameter(exc.args[0]) from exc
 
-    topic_list = _ros_capture(["ros2", "topic", "list", "--types"], timeout=timeout_sec)
-    if topic_list.returncode != 0:
-        _print_ros_failure("ros2 topic list --types", topic_list)
-        raise typer.Exit(topic_list.returncode or 1)
-
-    inventory = _parse_topic_inventory(topic_list.stdout)
+    inventory = _collect_topic_inventory(timeout_sec)
 
     table = Table(title=f"ROS Graph Check: {preset.name}")
     table.add_column("Stream")
@@ -122,6 +151,9 @@ def _render_ros_check(name: str, timeout_sec: float) -> tuple[bool, str]:
             topic_info = _ros_capture(["ros2", "topic", "info", "-v", topic], timeout=timeout_sec)
             if topic_info.returncode == 0:
                 publishers = _extract_count(topic_info.stdout, "Publisher count")
+                info_type = _extract_count(topic_info.stdout, "Type")
+                if info_type != "?":
+                    seen_type = info_type
             else:
                 publishers = "?"
 
@@ -261,7 +293,10 @@ def doctor(
 def config_check(path: Path) -> None:
     with path.open("r", encoding="utf-8") as handle:
         parsed = yaml.safe_load(handle)
-    console.print({"path": str(path), "top_level_keys": sorted(parsed.keys()) if parsed else []})
+    if not isinstance(parsed, dict):
+        console.print({"path": str(path), "top_level_keys": [], "warning": "Not a YAML mapping"})
+        return
+    console.print({"path": str(path), "top_level_keys": sorted(parsed.keys())})
 
 
 @app.command("preset-list")
@@ -297,13 +332,13 @@ def preset_list(
 
 @app.command("preset-matrix")
 def preset_matrix(
-    format: str = typer.Option("table", "--format", help="Output format: table or markdown."),
+    output_format: str = typer.Option("table", "--format", help="Output format: table or markdown."),
 ) -> None:
     rows = _preset_matrix_rows()
-    if format not in {"table", "markdown"}:
+    if output_format not in {"table", "markdown"}:
         raise typer.BadParameter("format must be one of: table, markdown")
 
-    if format == "markdown":
+    if output_format == "markdown":
         lines = [
             "| Vendor | Core | CT | Cloud Topic | IMU Topic | Base Frame |",
             "| --- | --- | --- | --- | --- | --- |",

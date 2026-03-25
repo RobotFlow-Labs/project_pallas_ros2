@@ -54,6 +54,7 @@ More operator guidance:
 
 - no-hardware walkthrough: [`docs/demo_quickstart.md`](docs/demo_quickstart.md)
 - first live LiDAR bring-up: [`docs/first_lidar_test.md`](docs/first_lidar_test.md)
+- Gazebo simulation and CUDA path: [`docs/gazebo_simulation.md`](docs/gazebo_simulation.md)
 - preset details and topic conventions: [`docs/sensor_presets.md`](docs/sensor_presets.md)
 - launch asset checklist: [`docs/launch_assets.md`](docs/launch_assets.md)
 
@@ -69,6 +70,7 @@ Generated from preset metadata via `uv run pallas-dev preset-matrix --format mar
 
 | Vendor | Core | CT | Cloud Topic | IMU Topic | Base Frame |
 | --- | --- | --- | --- | --- | --- |
+| Gazebo | yes | yes | /anima/lidar/points | /anima/imu/data | imu_frame |
 | Generic | yes | yes | /points_raw | /imu/data | imu |
 | Hesai | yes | yes | /lidar_points | /lidar_imu | hesai_lidar |
 | Livox | yes | yes | /livox/lidar | /livox/imu | livox_frame |
@@ -92,6 +94,16 @@ These presets are integration starting points, not a substitute for calibration.
 For any sensor that publishes LiDAR and IMU in different frames, you still need
 to set `sensor_to_body_translation` and `sensor_to_body_rpy` to your measured
 LiDAR-to-IMU extrinsics.
+
+For a full no-hardware ROS graph, use the Gazebo path:
+
+```bash
+./scripts/gazebo_lidar_test.sh
+./scripts/gazebo_cuda_test.sh
+```
+
+The CPU path targets the shared ANIMA Gazebo repo. The CUDA wrapper is the
+dedicated NVIDIA-backed launch surface.
 
 ## Proof Surface
 

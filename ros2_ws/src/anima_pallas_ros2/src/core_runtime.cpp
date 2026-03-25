@@ -1,36 +1,10 @@
 #include <anima_pallas_ros2/core_runtime.hpp>
+#include <anima_pallas_ros2/normal_utils.hpp>
 
 #include <rclcpp/time.hpp>
 
 #include <algorithm>
 #include <utility>
-
-namespace anima::pallas {
-
-namespace {
-
-Eigen::Vector3d NormalizeNormal(
-  const Eigen::Vector3d& normal,
-  const Eigen::Vector3d& point_hint)
-{
-  Eigen::Vector3d normalized = normal;
-  if (!normalized.allFinite() || normalized.norm() < 1e-9) {
-    if (point_hint.norm() > 1e-9) {
-      normalized = -point_hint.normalized();
-    } else {
-      normalized = Eigen::Vector3d::UnitZ();
-    }
-  } else {
-    normalized.normalize();
-  }
-
-  if (point_hint.norm() > 1e-9 && normalized.dot(point_hint) > 0.0) {
-    normalized = -normalized;
-  }
-  return normalized;
-}
-
-}  // namespace
 
 PallasCoreRuntime::PallasCoreRuntime(PipelineConfig config)
 : config_(std::move(config)),

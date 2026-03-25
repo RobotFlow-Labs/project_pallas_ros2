@@ -13,3 +13,7 @@ artifacts/
 data/bags/
 
 compile_commands.json
+
+# Claude Code local settings (personal, not shared)
+.claude/settings.local.json
+.DS_Store

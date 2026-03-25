@@ -5,14 +5,20 @@
 
 namespace anima::pallas {
 
-PallasCtRuntime::PallasCtRuntime(PipelineConfig config)
-: config_(std::move(config)),
-  core_(config_)
-{
-  config_.ct_min_control_points = std::max<std::size_t>(2, config_.ct_min_control_points);
-  config_.ct_max_control_points =
-    std::max(config_.ct_min_control_points, config_.ct_max_control_points);
+namespace {
+
+PipelineConfig ClampCtConfig(PipelineConfig cfg) {
+  cfg.ct_min_control_points = std::max<std::size_t>(2, cfg.ct_min_control_points);
+  cfg.ct_max_control_points = std::max(cfg.ct_min_control_points, cfg.ct_max_control_points);
+  return cfg;
 }
+
+}  // namespace
+
+PallasCtRuntime::PallasCtRuntime(PipelineConfig config)
+: config_(ClampCtConfig(std::move(config))),
+  core_(config_)
+{}
 
 void PallasCtRuntime::IngestImu(const ImuSample& sample)
 {

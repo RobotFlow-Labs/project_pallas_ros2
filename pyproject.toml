@@ -9,7 +9,6 @@ description = "UV-managed developer tooling for the ANIMA PALLAS ROS2 stack."
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [
-  "pydantic>=2.8",
   "pyyaml>=6.0",
   "rich>=13.9",
   "typer>=0.12",
