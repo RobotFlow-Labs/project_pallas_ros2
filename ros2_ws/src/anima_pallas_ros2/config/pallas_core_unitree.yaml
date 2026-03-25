@@ -2,6 +2,9 @@ anima_pallas_core_node:
   ros__parameters:
     lidar_type: "unitree"
 
+    # Unitree 4D LiDAR L2 — topics from unitree_lidar_ros2 driver (SDK v2.0.4).
+    # Driver defaults: cloud on /unilidar/cloud, IMU on /unilidar/imu.
+    # Connection: serial /dev/ttyACM0 @ 4Mbaud or Ethernet 192.168.1.2:6101.
     pointcloud_topic: "/unilidar/cloud"
     imu_topic: "/unilidar/imu"
 
@@ -11,23 +14,34 @@ anima_pallas_core_node:
     aligned_scan_topic: "/pallas/core/aligned_scan"
 
     odom_frame: "odom"
+    # The Unitree driver publishes TF: unilidar_imu_initial → unilidar_imu → unilidar_lidar.
+    # Use unilidar_imu as base_frame so PALLAS publishes odom → unilidar_imu.
     base_frame: "unilidar_imu"
 
-    # Unitree publishes cloud and IMU in different frames. Set these to the
-    # measured LiDAR-to-IMU extrinsics for your robot before field use.
+    # The L2 LiDAR and IMU are co-located in the same housing.
+    # Extrinsics are identity unless mounted with an offset on a robot.
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
 
+    # Bootstrap: the L2 IMU reports raw acceleration including gravity (~9.81 in z).
+    # Hold the sensor stationary for 2 seconds on startup.
     stationary_init_sec: 2.0
     gravity_mps2: 9.80665
-    min_range_m: 1.0
-    max_range_m: 200.0
-    scan_voxel_size_m: 0.10
-    scan_normal_radius_m: 0.30
+    max_accel_std_mps2: 0.25
+    max_gyro_std_radps: 0.03
+    max_accel_norm_error_mps2: 0.75
+
+    # The L2 has a 360° FoV with range up to 50m.
+    # For indoor use, cap at 30m to reduce noise from distant returns.
+    min_range_m: 0.05
+    max_range_m: 30.0
+
+    scan_voxel_size_m: 0.05
+    scan_normal_radius_m: 0.20
     scan_min_points_for_normal: 6
-    map_voxel_size_m: 0.20
-    map_max_surfels: 50000
-    map_max_age_sec: 60.0
+    map_voxel_size_m: 0.10
+    map_max_surfels: 100000
+    map_max_age_sec: 120.0
     max_imu_buffer_size: 20000
     map_publish_period_scans: 1
     ct_min_control_points: 4

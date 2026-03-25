@@ -2,6 +2,7 @@ anima_pallas_ct_node:
   ros__parameters:
     lidar_type: "unitree"
 
+    # Unitree 4D LiDAR L2 — continuous-time spline profile.
     pointcloud_topic: "/unilidar/cloud"
     imu_topic: "/unilidar/imu"
 
@@ -13,21 +14,23 @@ anima_pallas_ct_node:
     odom_frame: "odom"
     base_frame: "unilidar_imu"
 
-    # Unitree publishes cloud and IMU in different frames. Set these to the
-    # measured LiDAR-to-IMU extrinsics for your robot before field use.
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
 
     stationary_init_sec: 2.0
     gravity_mps2: 9.80665
-    min_range_m: 1.0
-    max_range_m: 200.0
-    scan_voxel_size_m: 0.10
-    scan_normal_radius_m: 0.30
+    max_accel_std_mps2: 0.25
+    max_gyro_std_radps: 0.03
+    max_accel_norm_error_mps2: 0.75
+
+    min_range_m: 0.05
+    max_range_m: 30.0
+    scan_voxel_size_m: 0.05
+    scan_normal_radius_m: 0.20
     scan_min_points_for_normal: 6
-    map_voxel_size_m: 0.20
-    map_max_surfels: 50000
-    map_max_age_sec: 60.0
+    map_voxel_size_m: 0.10
+    map_max_surfels: 100000
+    map_max_age_sec: 120.0
     max_imu_buffer_size: 20000
     map_publish_period_scans: 1
     ct_min_control_points: 4
