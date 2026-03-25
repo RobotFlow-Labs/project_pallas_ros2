@@ -181,15 +181,33 @@ public:
       map_topic_, rclcpp::QoS(1).transient_local().reliable());
     aligned_scan_pub_ = create_publisher<sensor_msgs::msg::PointCloud2>(aligned_scan_topic_, 10);
 
-    // Use RELIABLE QoS for IMU to match both RELIABLE publishers (e.g. Gazebo
-    // ros_gz_bridge) and BEST_EFFORT publishers (e.g. real hardware drivers).
-    // SensorDataQoS (BEST_EFFORT) silently drops messages from RELIABLE publishers
-    // in CycloneDDS.
+    // Configurable QoS reliability for sensor subscriptions.
+    // Default: "best_effort" (SensorDataQoS standard, matches real hardware).
+    // Set to "reliable" in Gazebo presets where ros_gz_bridge publishes RELIABLE.
+    // A BEST_EFFORT subscriber silently drops RELIABLE publisher data in CycloneDDS.
+    // See: https://design.ros2.org/articles/qos_configurability.html
+    const std::string imu_qos_str = declare_parameter<std::string>(
+      "imu_qos_reliability", "best_effort");
+    const std::string cloud_qos_str = declare_parameter<std::string>(
+      "cloud_qos_reliability", "best_effort");
+
+    auto make_sensor_qos = [](const std::string& reliability, int depth) {
+      rclcpp::QoS qos(depth);
+      if (reliability == "reliable") {
+        qos.reliable();
+      } else {
+        qos.best_effort();
+      }
+      qos.keep_last(depth);
+      qos.durability_volatile();
+      return qos;
+    };
+
     imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
-      imu_topic_, rclcpp::QoS(50).reliable().keep_last(50),
+      imu_topic_, make_sensor_qos(imu_qos_str, 50),
       std::bind(&PallasRuntimeNode::OnImu, this, std::placeholders::_1));
     cloud_sub_ = create_subscription<sensor_msgs::msg::PointCloud2>(
-      pointcloud_topic_, rclcpp::SensorDataQoS(),
+      pointcloud_topic_, make_sensor_qos(cloud_qos_str, 5),
       std::bind(&PallasRuntimeNode::OnCloud, this, std::placeholders::_1));
   }
 

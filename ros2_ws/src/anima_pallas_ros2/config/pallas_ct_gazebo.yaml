@@ -12,7 +12,7 @@ anima_pallas_ct_node:
     aligned_scan_topic: "/pallas/ct/aligned_scan"
 
     odom_frame: "odom"
-    base_frame: "quadruped_robot/lidar/lidar"
+    base_frame: "unitree_go2/lidar_link/lidar"
 
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
@@ -23,6 +23,10 @@ anima_pallas_ct_node:
     max_accel_std_mps2: 1.0
     max_gyro_std_radps: 0.5
     max_accel_norm_error_mps2: 2.0
+
+    # Gazebo ros_gz_bridge publishes with RELIABLE QoS.
+    imu_qos_reliability: "reliable"
+    cloud_qos_reliability: "reliable"
 
     min_range_m: 0.1
     max_range_m: 30.0
