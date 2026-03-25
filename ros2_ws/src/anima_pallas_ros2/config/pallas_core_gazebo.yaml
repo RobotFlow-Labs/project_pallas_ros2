@@ -3,7 +3,7 @@ anima_pallas_core_node:
     lidar_type: "generic"
 
     pointcloud_topic: "/anima/lidar/points"
-    imu_topic: "/anima/imu/data"
+    imu_topic: "/imu"
 
     pose_topic: "/pallas/core/pose"
     odom_topic: "/pallas/core/odom"
@@ -11,18 +11,18 @@ anima_pallas_core_node:
     aligned_scan_topic: "/pallas/core/aligned_scan"
 
     odom_frame: "odom"
-    base_frame: "imu_frame"
+    base_frame: "quadruped_robot/lidar/lidar"
 
-    # The ANIMA Gazebo smoke path assumes the standard module interface from
-    # the simulator repo. Keep these zeroed unless you intentionally change the
-    # LiDAR-to-IMU geometry in the simulated robot model.
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
 
-    stationary_init_sec: 2.0
-    # The Gazebo IMU stream on /anima/imu/data is already gravity-compensated,
-    # so the bootstrap and strapdown tracker must not subtract 9.80665 again.
+    stationary_init_sec: 0.5
+    # The Gazebo IMU is gravity-compensated (accel ~0 when stationary).
     gravity_mps2: 0.0
+    # Relaxed bootstrap thresholds for simulated IMU noise.
+    max_accel_std_mps2: 1.0
+    max_gyro_std_radps: 0.5
+    max_accel_norm_error_mps2: 2.0
     min_range_m: 0.1
     max_range_m: 30.0
     scan_voxel_size_m: 0.10

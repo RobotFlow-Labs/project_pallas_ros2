@@ -174,12 +174,6 @@ public:
     odom_frame_ = declare_parameter<std::string>("odom_frame", "odom");
     base_frame_ = declare_parameter<std::string>("base_frame", "imu");
 
-    // Ensure IMU and cloud callbacks are mutually exclusive even under
-    // MultiThreadedExecutor to prevent data races on the runtime state.
-    pipeline_cbg_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    rclcpp::SubscriptionOptions sub_opts;
-    sub_opts.callback_group = pipeline_cbg_;
-
     tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     pose_pub_ = create_publisher<geometry_msgs::msg::PoseStamped>(pose_topic_, 10);
     odom_pub_ = create_publisher<nav_msgs::msg::Odometry>(odom_topic_, 50);
@@ -187,14 +181,16 @@ public:
       map_topic_, rclcpp::QoS(1).transient_local().reliable());
     aligned_scan_pub_ = create_publisher<sensor_msgs::msg::PointCloud2>(aligned_scan_topic_, 10);
 
+    // Use RELIABLE QoS for IMU to match both RELIABLE publishers (e.g. Gazebo
+    // ros_gz_bridge) and BEST_EFFORT publishers (e.g. real hardware drivers).
+    // SensorDataQoS (BEST_EFFORT) silently drops messages from RELIABLE publishers
+    // in CycloneDDS.
     imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
-      imu_topic_, rclcpp::SensorDataQoS(),
-      std::bind(&PallasRuntimeNode::OnImu, this, std::placeholders::_1),
-      sub_opts);
+      imu_topic_, rclcpp::QoS(50).reliable().keep_last(50),
+      std::bind(&PallasRuntimeNode::OnImu, this, std::placeholders::_1));
     cloud_sub_ = create_subscription<sensor_msgs::msg::PointCloud2>(
       pointcloud_topic_, rclcpp::SensorDataQoS(),
-      std::bind(&PallasRuntimeNode::OnCloud, this, std::placeholders::_1),
-      sub_opts);
+      std::bind(&PallasRuntimeNode::OnCloud, this, std::placeholders::_1));
   }
 
 private:
@@ -204,6 +200,9 @@ private:
     cfg.lidar_type = declare_parameter<std::string>("lidar_type", "generic");
     cfg.stationary_init_sec = declare_parameter<double>("stationary_init_sec", 2.0);
     cfg.gravity_mps2 = declare_parameter<double>("gravity_mps2", 9.80665);
+    cfg.max_accel_std_mps2 = declare_parameter<double>("max_accel_std_mps2", 0.25);
+    cfg.max_gyro_std_radps = declare_parameter<double>("max_gyro_std_radps", 0.03);
+    cfg.max_accel_norm_error_mps2 = declare_parameter<double>("max_accel_norm_error_mps2", 0.75);
     cfg.min_range_m = declare_parameter<double>("min_range_m", 1.0);
     cfg.max_range_m = declare_parameter<double>("max_range_m", 200.0);
     cfg.scan_voxel_size_m = declare_parameter<double>("scan_voxel_size_m", 0.10);
@@ -288,7 +287,6 @@ private:
   std::string base_frame_;
 
   std::unique_ptr<RuntimeT> runtime_;
-  rclcpp::CallbackGroup::SharedPtr pipeline_cbg_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_sub_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;

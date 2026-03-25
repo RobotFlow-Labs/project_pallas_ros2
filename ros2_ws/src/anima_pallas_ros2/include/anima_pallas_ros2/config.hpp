@@ -11,6 +11,9 @@ struct PipelineConfig {
   std::string lidar_type{"generic"};
   double stationary_init_sec{2.0};
   double gravity_mps2{9.80665};
+  double max_accel_std_mps2{0.25};
+  double max_gyro_std_radps{0.03};
+  double max_accel_norm_error_mps2{0.75};
   double min_range_m{1.0};
   double max_range_m{200.0};
   double scan_voxel_size_m{0.10};

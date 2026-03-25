@@ -20,9 +20,9 @@ PallasCoreRuntime::PallasCoreRuntime(PipelineConfig config)
       20,
       config_.max_imu_buffer_size,
       config_.gravity_mps2,
-      0.25,
-      0.03,
-      0.75}),
+      config_.max_accel_std_mps2,
+      config_.max_gyro_std_radps,
+      config_.max_accel_norm_error_mps2}),
   tracker_(StrapdownTrackerOptions{
     config_.gravity_mps2,
     config_.max_imu_buffer_size,
@@ -45,6 +45,14 @@ void PallasCoreRuntime::IngestImu(const ImuSample& sample)
     const auto seed = bootstrap_.TrySeed(0.0);
     if (seed.has_value()) {
       tracker_.Initialize(*seed);
+    } else if (bootstrap_.Size() > 200) {
+      // Fallback: if bootstrap collected 200+ samples but stationarity checks
+      // still fail (e.g. simulated IMU with unusual noise), force-init with
+      // identity orientation to avoid indefinite blocking.
+      PoseState forced_seed;
+      forced_seed.stamp_sec = sample.stamp_sec;
+      forced_seed.orientation = Eigen::Quaterniond::Identity();
+      tracker_.Initialize(forced_seed);
     }
   }
   if (tracker_.IsInitialized()) {

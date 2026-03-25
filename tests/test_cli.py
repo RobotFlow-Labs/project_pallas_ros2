@@ -203,14 +203,14 @@ def test_ros_check_falls_back_when_topic_list_types_is_unsupported(monkeypatch) 
                 cmd,
                 0,
                 "/anima/lidar/points [sensor_msgs/msg/PointCloud2]\n"
-                "/anima/imu/data [sensor_msgs/msg/Imu]\n",
+                "/imu [sensor_msgs/msg/Imu]\n",
                 "",
             )
         if cmd == ["ros2", "topic", "info", "-v", "/anima/lidar/points"]:
             return subprocess.CompletedProcess(
                 cmd, 0, "Type: sensor_msgs/msg/PointCloud2\nPublisher count: 1\n", ""
             )
-        if cmd == ["ros2", "topic", "info", "-v", "/anima/imu/data"]:
+        if cmd == ["ros2", "topic", "info", "-v", "/imu"]:
             return subprocess.CompletedProcess(
                 cmd, 0, "Type: sensor_msgs/msg/Imu\nPublisher count: 1\n", ""
             )
