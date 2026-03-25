@@ -2,6 +2,9 @@ anima_pallas_core_node:
   ros__parameters:
     lidar_type: "generic"
 
+    # ANIMA Gazebo simulation topics.
+    # The terrain.sdf world publishes LiDAR on the standard ANIMA path,
+    # but the IMU lands on /imu (not /anima/imu/data) via ros_gz_bridge.
     pointcloud_topic: "/anima/lidar/points"
     imu_topic: "/imu"
 
@@ -11,18 +14,21 @@ anima_pallas_core_node:
     aligned_scan_topic: "/pallas/core/aligned_scan"
 
     odom_frame: "odom"
+    # The Gazebo quadruped robot publishes LiDAR in this frame.
+    # PALLAS uses it as the base_frame for TF: odom → base_frame.
     base_frame: "quadruped_robot/lidar/lidar"
 
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
 
+    # Gazebo bootstrap: the simulated IMU is gravity-compensated
+    # (accel ≈ 0 when stationary) and noisier than real hardware.
     stationary_init_sec: 0.5
-    # The Gazebo IMU is gravity-compensated (accel ~0 when stationary).
     gravity_mps2: 0.0
-    # Relaxed bootstrap thresholds for simulated IMU noise.
     max_accel_std_mps2: 1.0
     max_gyro_std_radps: 0.5
     max_accel_norm_error_mps2: 2.0
+
     min_range_m: 0.1
     max_range_m: 30.0
     scan_voxel_size_m: 0.10
