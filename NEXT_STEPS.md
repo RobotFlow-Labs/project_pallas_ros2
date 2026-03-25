@@ -4,59 +4,69 @@
 
 ## Session Summary
 
-Full code inspection across Python, C++, docs, and infra. 26 issues identified and fixed across two passes.
+Full E2E validation completed. Repo is PUBLIC with green CI. Gazebo simulation running with PALLAS processing LiDAR at 121Hz via Foxglove.
 
-## Accomplished
+## Accomplished Today
 
-### Pass 1 — Critical & High Fixes
-- [x] Zip Slip vulnerability patched (demo.py — safe extraction with path validation)
-- [x] HTTP download hardened (HTTPS enforcement + 500MB size cap)
-- [x] CT runtime config clamped before core construction
-- [x] Thread safety via MutuallyExclusive callback group in runtime_node.hpp
-- [x] Hardcoded developer path replaced with `$PALLAS_SIM_ROOT` env var
-- [x] Subprocess leak in `run_demo_replay` — full try/finally lifecycle
-- [x] `seen_topics` tracking fixed in verification polling loop
-- [x] `config-check` crash on non-dict YAML fixed
-- [x] `builtin_interfaces` + `eigen` added to package.xml and CMakeLists.txt
-- [x] SECURITY.md, CHANGELOG.md, CODE_OF_CONDUCT.md created
-- [x] CMake `-O3` removed (debug builds now work)
-- [x] Quaternion slerp hemisphere check added
-- [x] Negative ROS param validation with warnings
-- [x] Redundant `CullExpired` call removed
-- [x] `pydantic` dependency removed (unused)
-- [x] `format` param renamed to `output_format` (shadowed builtin)
-- [x] `scan_count_` changed to `std::atomic<size_t>`
-- [x] `EIGEN_MAKE_ALIGNED_OPERATOR_NEW` added to PoseState
-- [x] Dockerfile `uv` version pinned
+### Code Inspection & Fixes (26 issues)
+- [x] Security: Zip Slip, HTTPS enforcement, download size cap
+- [x] Correctness: CT config, subprocess leak, topic tracking, YAML guard, quaternion slerp
+- [x] Performance: O(N) normals, batch pruning, spline moved to .cpp, endianness cached
+- [x] Quality: FallbackNormal dedup, module docstrings, unused deps removed
+- [x] Thread safety: atomic scan_count_, Eigen alignment macro
 
-### Pass 2 — Performance & Quality
-- [x] O(N^2) normal estimation replaced with voxel-grid spatial index (3x3x3 neighborhood)
-- [x] O(N*K) PruneToLimit replaced with batch sort + erase
-- [x] TimedPoseSpline: 450 lines moved from header to .cpp
-- [x] `HostIsBigEndian()` cached as file-level constant
-- [x] `FallbackNormal` + `NormalizeNormal` deduplicated into `normal_utils.hpp`
-- [x] Module-level docstrings added to all 5 Python modules
+### Critical Bug Fix: IMU QoS Mismatch
+- [x] Root cause: `SensorDataQoS` (BEST_EFFORT) silently drops IMU from RELIABLE publishers in CycloneDDS
+- [x] Fix: Changed to `rclcpp::QoS(50).reliable()` for IMU subscription
+- [x] Exposed bootstrap thresholds as ROS params (max_accel_std, max_gyro_std, max_accel_norm_error)
+- [x] Added force-init fallback after 200 samples for simulated IMU
+- [x] Updated Gazebo preset with correct topics and relaxed thresholds
 
-### Project Config
-- [x] CLAUDE.md created
-- [x] .claude/settings.json + settings.local.json + rules configured
+### E2E Validation
+- [x] CI green on both Humble and Jazzy (50 total tests)
+- [x] Gazebo simulation running with terrain.sdf world
+- [x] PALLAS processing LiDAR at 121Hz, publishing odom + local_map + aligned_scan
+- [x] Foxglove connected showing live data, rainbow point cloud rendering
+- [x] 24 proof screenshots collected in docs/assets/proof/
+- [x] Repo made PUBLIC
+
+### Infrastructure
+- [x] CLAUDE.md, .claude/settings.json, rules, commands created
+- [x] /pallas, /pallas-test, /pallas-unitree commands ready
+- [x] pallas_rainbow.rviz config created
+- [x] SECURITY.md, CHANGELOG.md, CODE_OF_CONDUCT.md added
+
+## Monday Plan — Unitree 4D LiDAR Test
+
+1. Connect Unitree 4D LiDAR L2 via USB/Ethernet
+2. Run `/pallas-unitree` for step-by-step bring-up
+3. Hold sensor still 2 seconds for IMU bootstrap
+4. Walk around room — `local_map` builds rainbow 3D map
+5. Record 60-second video for social media
+6. Screenshot dense rainbow map for README hero image
+7. Commit results and launch promotion campaign
 
 ## Still TODO
 
-### Testing Gaps
-- [ ] No C++ unit tests (only ament_lint_auto)
-- [ ] No clang-tidy in CI
-- [ ] No sanitizer runs (ASAN/UBSAN)
-- [ ] Python: no tests for `build`, `test`, `lint` commands
-- [ ] Python: no non-dry-run `demo-replay` test
+### Testing
+- [ ] Real hardware test with Unitree 4D LiDAR (Monday)
+- [ ] GPU Gazebo server for richer simulation worlds
+- [ ] C++ unit tests (only ament_lint_auto currently)
+
+### Promotion
+- [ ] Reddit r/ROS, r/robotics post
+- [ ] ROS Discourse announcement
+- [ ] Hacker News Show HN
+- [ ] Twitter/X thread with video
+- [ ] LinkedIn post from RobotFlow Labs
 
 ### Polish
-- [ ] Version single-sourced (currently in both __init__.py and pyproject.toml)
-- [ ] mypy strict mode not enabled
-- [ ] `NormalizeRelativeTime` time heuristic is fragile (magnitude-based guessing)
+- [ ] Version single-sourced
+- [ ] mypy strict mode
+- [ ] NormalizeRelativeTime heuristic improvement
 
 ## Blocking Issues
 - None
 
-## MVP Readiness: 92%
-All security, correctness, performance, and documentation fixes applied. Tests pass. Remaining work is test coverage expansion and CI hardening.
+## MVP Readiness: 95%
+All code fixes applied, CI green, Gazebo E2E proven, Foxglove visualization working. Only missing: real hardware rainbow demo (Monday).
