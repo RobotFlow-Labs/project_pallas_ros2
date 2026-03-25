@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <utility>
 
+namespace anima::pallas {
+
 PallasCoreRuntime::PallasCoreRuntime(PipelineConfig config)
 : config_(std::move(config)),
   ingest_(CloudIngestOptions{

@@ -1,0 +1,148 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.3
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 80; 80; 80
+      Enabled: true
+      Line Style:
+        Line Width: 0.02
+        Value: Lines
+      Name: Grid
+      Plane: XY
+      Plane Cell Count: 60
+      Value: true
+
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Frame Timeout: 15
+      Marker Scale: 0.3
+      Name: TF
+      Show Axes: true
+      Show Names: false
+      Value: true
+
+    # ── Rainbow Local Map ──────────────────────────────────────
+    # Height-colorized accumulated surfel map (the Unitree look).
+    # Points are colored by Z-axis: red (floor) → yellow → green
+    # → cyan → blue (ceiling).  This is the flagship visualization.
+    - Class: rviz_default_plugins/PointCloud2
+      Color Transformer: AxisColor
+      Axis: Z
+      Autocompute Intensity Bounds: true
+      Enabled: true
+      Name: Rainbow Map
+      Position Transformer: XYZ
+      Queue Size: 1
+      Selectable: false
+      Size (Pixels): 3
+      Size (m): 0.04
+      Style: Flat Squares
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /pallas/core/local_map
+      Use Fixed Frame: true
+      Value: true
+
+    # ── Live Scan (white overlay) ──────────────────────────────
+    # Current aligned scan as bright white dots on top of the
+    # rainbow map — shows where the sensor is looking right now.
+    - Class: rviz_default_plugins/PointCloud2
+      Color Transformer: FlatColor
+      Color: 255; 255; 255
+      Enabled: true
+      Name: Live Scan
+      Position Transformer: XYZ
+      Queue Size: 2
+      Selectable: false
+      Size (Pixels): 2
+      Size (m): 0.02
+      Style: Points
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+        Value: /pallas/core/aligned_scan
+      Use Fixed Frame: true
+      Value: true
+
+    # ── Odometry Trail ─────────────────────────────────────────
+    # Trajectory breadcrumbs as red arrows.
+    - Class: rviz_default_plugins/Odometry
+      Enabled: true
+      Keep: 200
+      Name: Trajectory
+      Position Tolerance: 0.05
+      Angle Tolerance: 0.1
+      Shape:
+        Alpha: 0.9
+        Axes Length: 0.3
+        Axes Radius: 0.02
+        Color: 255; 40; 0
+        Shaft Length: 0.2
+        Shaft Radius: 0.03
+        Value: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /pallas/core/odom
+      Value: true
+
+    # ── Current Pose ───────────────────────────────────────────
+    # Big green arrow showing where the robot is now.
+    - Class: rviz_default_plugins/Pose
+      Enabled: true
+      Name: Current Pose
+      Shape:
+        Alpha: 1.0
+        Arrow Length: 1.2
+        Axes Length: 0.5
+        Axes Radius: 0.04
+        Color: 0; 255; 80
+        Shaft Length: 0.9
+        Shaft Radius: 0.06
+        Value: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /pallas/core/pose
+      Value: true
+
+  Enabled: true
+  Fixed Frame: odom
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 15
+      Focal Point:
+        X: 3
+        Y: 0
+        Z: 1
+      Name: Orbit
+      Pitch: 0.65
+      Yaw: 3.14
+Window Geometry:
+  Height: 1000
+  Width: 1600
