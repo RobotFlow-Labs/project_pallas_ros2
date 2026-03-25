@@ -81,16 +81,26 @@ void SurfelVolume::PruneToLimit()
   }
 
   // Batch sort by (stamp, sequence) and erase the oldest entries in one pass.
-  std::vector<std::pair<std::pair<double, uint64_t>, VoxelKey>> entries;
+  struct PruneEntry {
+    double stamp_sec;
+    uint64_t sequence;
+    VoxelKey key;
+    bool operator<(const PruneEntry& other) const {
+      if (stamp_sec != other.stamp_sec) return stamp_sec < other.stamp_sec;
+      return sequence < other.sequence;
+    }
+  };
+
+  std::vector<PruneEntry> entries;
   entries.reserve(surfels_.size());
   for (const auto& [key, entry] : surfels_) {
-    entries.push_back({{entry.surfel.stamp_sec, entry.sequence}, key});
+    entries.push_back({entry.surfel.stamp_sec, entry.sequence, key});
   }
   std::sort(entries.begin(), entries.end());
 
   const std::size_t to_remove = surfels_.size() - options_.max_surfels;
   for (std::size_t i = 0; i < to_remove; ++i) {
-    surfels_.erase(entries[i].second);
+    surfels_.erase(entries[i].key);
   }
 }
 
