@@ -126,8 +126,10 @@ RuntimeOutputs PallasCoreRuntime::FinalizeScan(
       // Estimate gyro bias from rotation drift between scans.
       const Eigen::AngleAxisd aa(alignment->rotation_delta);
       const double scan_dt = 0.15;
-      const Eigen::Vector3d implied_gyro_bias =
-        (aa.angle() > 1e-6) ? (aa.axis() * aa.angle() / scan_dt) : Eigen::Vector3d::Zero();
+      Eigen::Vector3d implied_gyro_bias = Eigen::Vector3d::Zero();
+      if (aa.angle() > 1e-6) {
+        implied_gyro_bias = aa.axis() * aa.angle() / scan_dt;
+      }
 
       tracker_.ApplyCorrection(
         alignment->position_delta,
