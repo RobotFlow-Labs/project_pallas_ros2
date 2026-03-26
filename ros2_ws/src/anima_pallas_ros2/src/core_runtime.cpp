@@ -118,22 +118,49 @@ RuntimeOutputs PallasCoreRuntime::FinalizeScan(
   }
 
   // Scan-to-map alignment: correct IMU drift using point-to-plane ICP.
-  // Skip the first scan (no map yet to align against).
   PoseState corrected_scan_pose = scan_pose;
   PoseState corrected_odom_pose = odom_pose;
   if (scan_count_ > 0) {
     const auto alignment = surfel_volume_.AlignScan(transformed);
-    if (alignment && alignment->converged && alignment->inlier_count > 20) {
+    if (alignment && alignment->inlier_count > 5) {
+      // Estimate gyro bias from rotation drift between scans.
+      const Eigen::AngleAxisd aa(alignment->rotation_delta);
+      const double scan_dt = 0.15;
+      const Eigen::Vector3d implied_gyro_bias =
+        (aa.angle() > 1e-6) ? (aa.axis() * aa.angle() / scan_dt) : Eigen::Vector3d::Zero();
+
       tracker_.ApplyCorrection(
         alignment->position_delta,
         alignment->rotation_delta,
+        implied_gyro_bias,
         Eigen::Vector3d::Zero(),
-        Eigen::Vector3d::Zero());
+        0.3);
 
-      // Re-query corrected state and re-transform scan
       corrected_scan_pose = tracker_.StateAt(prepared.stamp_sec);
       corrected_odom_pose = tracker_.Latest();
       transformed = TransformScan(prepared.sampled_scan, corrected_scan_pose);
+    } else {
+      // ICP failed (no inliers — scan drifted too far from map).
+      // Hard-reset position back toward map centroid to recover.
+      const auto map_cloud = surfel_volume_.Cloud();
+      if (!map_cloud.empty()) {
+        Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
+        for (const auto& pt : map_cloud) {
+          centroid += pt.xyz;
+        }
+        centroid /= static_cast<double>(map_cloud.size());
+        const Eigen::Vector3d reset_delta = centroid - scan_pose.position;
+        tracker_.ApplyCorrection(
+          reset_delta,
+          Eigen::Quaterniond::Identity(),
+          Eigen::Vector3d::Zero(),
+          Eigen::Vector3d::Zero(),
+          1.0);  // full correction — hard reset
+
+        corrected_scan_pose = tracker_.StateAt(prepared.stamp_sec);
+        corrected_odom_pose = tracker_.Latest();
+        transformed = TransformScan(prepared.sampled_scan, corrected_scan_pose);
+      }
     }
   }
 
