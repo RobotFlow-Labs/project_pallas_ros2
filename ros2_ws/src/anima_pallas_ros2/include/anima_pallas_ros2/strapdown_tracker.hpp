@@ -29,6 +29,15 @@ public:
   PoseState StateAt(double stamp_sec) const;
   std::vector<PoseState> History() const;
 
+  /// Apply an external pose correction (e.g. from scan-to-map alignment).
+  /// Updates the latest state and optionally blends bias corrections.
+  void ApplyCorrection(
+    const Eigen::Vector3d& position_delta,
+    const Eigen::Quaterniond& rotation_delta,
+    const Eigen::Vector3d& gyro_bias_update,
+    const Eigen::Vector3d& accel_bias_update,
+    double bias_learning_rate = 0.1);
+
 private:
   static Eigen::Quaterniond IntegrateRotation(
     const Eigen::Quaterniond& current,

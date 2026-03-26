@@ -112,9 +112,29 @@ RuntimeOutputs PallasCoreRuntime::FinalizeScan(
     return outputs;
   }
 
-  const SampledScan transformed = TransformScan(prepared.sampled_scan, scan_pose);
+  SampledScan transformed = TransformScan(prepared.sampled_scan, scan_pose);
   if (transformed.empty()) {
     return outputs;
+  }
+
+  // Scan-to-map alignment: correct IMU drift using point-to-plane ICP.
+  // Skip the first scan (no map yet to align against).
+  PoseState corrected_scan_pose = scan_pose;
+  PoseState corrected_odom_pose = odom_pose;
+  if (scan_count_ > 0) {
+    const auto alignment = surfel_volume_.AlignScan(transformed);
+    if (alignment && alignment->converged && alignment->inlier_count > 20) {
+      tracker_.ApplyCorrection(
+        alignment->position_delta,
+        alignment->rotation_delta,
+        Eigen::Vector3d::Zero(),
+        Eigen::Vector3d::Zero());
+
+      // Re-query corrected state and re-transform scan
+      corrected_scan_pose = tracker_.StateAt(prepared.stamp_sec);
+      corrected_odom_pose = tracker_.Latest();
+      transformed = TransformScan(prepared.sampled_scan, corrected_scan_pose);
+    }
   }
 
   surfel_volume_.Integrate(transformed, prepared.stamp_sec);
@@ -122,8 +142,8 @@ RuntimeOutputs PallasCoreRuntime::FinalizeScan(
 
   outputs.ready = true;
   outputs.initialized = true;
-  outputs.scan_pose = scan_pose;
-  outputs.odom_pose = odom_pose;
+  outputs.scan_pose = corrected_scan_pose;
+  outputs.odom_pose = corrected_odom_pose;
   outputs.aligned_scan.reserve(transformed.size());
   for (const auto& sample : transformed) {
     outputs.aligned_scan.push_back(sample.point);

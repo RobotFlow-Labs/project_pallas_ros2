@@ -163,4 +163,31 @@ void StrapdownTracker::TrimHistoryUnlocked()
   }
 }
 
+void StrapdownTracker::ApplyCorrection(
+  const Eigen::Vector3d& position_delta,
+  const Eigen::Quaterniond& rotation_delta,
+  const Eigen::Vector3d& gyro_bias_update,
+  const Eigen::Vector3d& accel_bias_update,
+  double bias_learning_rate)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (!initialized_ || history_.empty()) {
+    return;
+  }
+
+  PoseState& latest = history_.back();
+  latest.position += position_delta;
+  latest.orientation = rotation_delta * latest.orientation;
+  latest.orientation.normalize();
+
+  // Blend bias corrections with a conservative learning rate to avoid
+  // overcorrection from single-scan noise.
+  latest.gyro_bias += bias_learning_rate * gyro_bias_update;
+  latest.accel_bias += bias_learning_rate * accel_bias_update;
+
+  // Correct velocity proportionally (position drift implies velocity error).
+  // Scale by a fraction since we don't know the exact time span.
+  latest.velocity += 0.5 * position_delta;
+}
+
 }  // namespace anima::pallas

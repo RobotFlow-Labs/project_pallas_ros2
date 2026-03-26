@@ -23,13 +23,12 @@ anima_pallas_core_node:
     sensor_to_body_translation: [0.0, 0.0, 0.0]
     sensor_to_body_rpy: [0.0, 0.0, 0.0]
 
-    # Gazebo bootstrap: the simulated IMU is gravity-compensated
-    # (accel ≈ 0 when stationary) and noisier than real hardware.
-    stationary_init_sec: 0.5
-    gravity_mps2: 0.0
-    max_accel_std_mps2: 1.0
-    max_gyro_std_radps: 0.5
-    max_accel_norm_error_mps2: 2.0
+    # Gazebo IMU reports raw acceleration including gravity (~9.8 in z).
+    stationary_init_sec: 1.0
+    gravity_mps2: 9.80665
+    max_accel_std_mps2: 0.5
+    max_gyro_std_radps: 0.1
+    max_accel_norm_error_mps2: 1.0
 
     # Gazebo ros_gz_bridge publishes with RELIABLE QoS. Default BEST_EFFORT
     # subscribers silently drop these messages in CycloneDDS.

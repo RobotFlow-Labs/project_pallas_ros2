@@ -1,17 +1,28 @@
 #pragma once
 
 #include <anima_pallas_ros2/scan_sampler.hpp>
+#include <anima_pallas_ros2/types.hpp>
 
 #include <builtin_interfaces/msg/time.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace anima::pallas {
+
+/// Result of scan-to-map alignment (point-to-plane ICP).
+struct AlignmentResult {
+  Eigen::Vector3d position_delta{Eigen::Vector3d::Zero()};
+  Eigen::Quaterniond rotation_delta{Eigen::Quaterniond::Identity()};
+  double mean_residual_m{0.0};
+  std::size_t inlier_count{0};
+  bool converged{false};
+};
 
 struct Surfel {
   Eigen::Vector3d position{Eigen::Vector3d::Zero()};
@@ -36,6 +47,13 @@ public:
   const SurfelVolumeOptions& options() const;
   void Reset();
   void Integrate(const SampledScan& scan, double stamp_sec);
+
+  /// Point-to-plane ICP alignment of a scan against the existing map.
+  /// Returns a correction delta if alignment converges, nullopt otherwise.
+  std::optional<AlignmentResult> AlignScan(
+    const SampledScan& scan,
+    std::size_t max_iterations = 10,
+    double convergence_threshold_m = 0.005) const;
 
   std::size_t Size() const;
   std::vector<Surfel> Snapshot() const;

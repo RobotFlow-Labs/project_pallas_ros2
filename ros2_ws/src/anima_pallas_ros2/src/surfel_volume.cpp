@@ -260,4 +260,113 @@ sensor_msgs::msg::PointCloud2 SurfelVolume::ToPointCloud2(
   return msg;
 }
 
+std::optional<AlignmentResult> SurfelVolume::AlignScan(
+  const SampledScan& scan,
+  std::size_t max_iterations,
+  double convergence_threshold_m) const
+{
+  if (surfels_.size() < 10 || scan.size() < 10) {
+    return std::nullopt;
+  }
+
+  // Accumulated transform: position offset + small rotation
+  Eigen::Vector3d total_translation = Eigen::Vector3d::Zero();
+  Eigen::Matrix3d total_rotation = Eigen::Matrix3d::Identity();
+
+  for (std::size_t iter = 0; iter < max_iterations; ++iter) {
+    // Build 6x6 normal equation for point-to-plane ICP:
+    // minimize sum_i ((R*p_i + t - q_i) · n_i)^2
+    // Linearized: sum_i ((cross(p_i, n_i) · omega + n_i · t - d_i))^2
+    Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
+    Eigen::Matrix<double, 6, 1> g = Eigen::Matrix<double, 6, 1>::Zero();
+    double total_residual = 0.0;
+    std::size_t inlier_count = 0;
+
+    for (const auto& sample : scan) {
+      // Apply accumulated correction to scan point
+      const Eigen::Vector3d p = total_rotation * sample.point.xyz + total_translation;
+
+      // Find nearest surfel via voxel lookup
+      const VoxelKey key = MakeKey(p);
+      const auto it = surfels_.find(key);
+      if (it == surfels_.end()) {
+        continue;
+      }
+
+      const Surfel& surfel = it->second.surfel;
+      const Eigen::Vector3d& q = surfel.position;
+      const Eigen::Vector3d& n = surfel.normal;
+
+      // Skip if normal is degenerate
+      if (n.squaredNorm() < 0.5) {
+        continue;
+      }
+
+      // Point-to-plane residual
+      const double residual = (p - q).dot(n);
+
+      // Outlier rejection: skip if residual > 1m
+      if (std::abs(residual) > 1.0) {
+        continue;
+      }
+
+      // Jacobian row: [cross(p, n), n]
+      const Eigen::Vector3d cross_pn = p.cross(n);
+      Eigen::Matrix<double, 1, 6> J;
+      J << cross_pn.x(), cross_pn.y(), cross_pn.z(), n.x(), n.y(), n.z();
+
+      H += J.transpose() * J;
+      g += J.transpose() * residual;
+      total_residual += residual * residual;
+      ++inlier_count;
+    }
+
+    if (inlier_count < 5) {
+      return std::nullopt;
+    }
+
+    // Add damping for numerical stability (Levenberg-Marquardt style)
+    for (int i = 0; i < 6; ++i) {
+      H(i, i) += 1e-6;
+    }
+
+    // Solve: H * delta = -g
+    const Eigen::Matrix<double, 6, 1> delta = H.ldlt().solve(-g);
+
+    // Extract rotation (small angle approximation) and translation
+    const Eigen::Vector3d omega = delta.head<3>();
+    const Eigen::Vector3d dt = delta.tail<3>();
+
+    // Apply incremental update
+    const double angle = omega.norm();
+    if (angle > 1e-12) {
+      const Eigen::AngleAxisd aa(angle, omega.normalized());
+      total_rotation = Eigen::Matrix3d(Eigen::Quaterniond(aa)) * total_rotation;
+    }
+    total_translation += dt;
+
+    const double mean_residual = std::sqrt(total_residual / static_cast<double>(inlier_count));
+
+    // Check convergence
+    if (dt.norm() < convergence_threshold_m && angle < 1e-4) {
+      AlignmentResult result;
+      result.position_delta = total_translation;
+      result.rotation_delta = Eigen::Quaterniond(total_rotation);
+      result.rotation_delta.normalize();
+      result.mean_residual_m = mean_residual;
+      result.inlier_count = inlier_count;
+      result.converged = true;
+      return result;
+    }
+  }
+
+  // Didn't converge but still return the best estimate if inliers > threshold
+  AlignmentResult result;
+  result.position_delta = total_translation;
+  result.rotation_delta = Eigen::Quaterniond(total_rotation);
+  result.rotation_delta.normalize();
+  result.converged = false;
+  return result;
+}
+
 }  // namespace anima::pallas
